@@ -1,20 +1,10 @@
-# netlify.toml - Netlify configuration for Ring of Kerry Tours
-
 [build]
   functions = "ring-of-kerry-tours/netlify/functions"
-  publish = "public"
-  command = "npm run build"
+  publish = "ring-of-kerry-tours/public"
+  command = ""
 
 [build.environment]
   NODE_VERSION = "18"
-
-# Custom domain redirects
-[[redirects]]
-  # Redirect www to non-www
-  from = "https://www.ringofkerrytours.com/*"
-  to = "https://ringofkerrytours.com/:splat"
-  status = 301
-  force = true
 
 # API routes to serverless functions
 [[redirects]]
@@ -32,78 +22,12 @@
   to = "/.netlify/functions/get-itinerary/:splat"
   status = 200
 
-# SEO-friendly URL redirects
-[[redirects]]
-  from = "/app"
-  to = "/planner"
-  status = 301
-
-[[redirects]]
-  from = "/plan"
-  to = "/planner"
-  status = 301
-
-[[redirects]]
-  from = "/trip-planner"
-  to = "/planner"
-  status = 301
-
-# 404 fallback
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 404
-
-# Security headers
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-
-# API endpoints headers (CORS)
-[[headers]]
-  for = "/.netlify/functions/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Headers = "Content-Type, Authorization"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
-    Access-Control-Max-Age = "86400"
-
-# Static assets caching
-[[headers]]
-  for = "/assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/*.css"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/*.js"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-# HTML pages - shorter cache for content updates
-[[headers]]
-  for = "/*.html"
-  [headers.values]
-    Cache-Control = "public, max-age=3600"
-
 # Functions configuration
 [functions]
   node_bundler = "esbuild"
   
-  # Increase timeout for AI API calls (30 seconds)
   [functions."generate-itinerary"]
     timeout = 30
     
   [functions."refine-itinerary"]
     timeout = 30
-    
-  [functions."get-itinerary"]
-    timeout = 10
