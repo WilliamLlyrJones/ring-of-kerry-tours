@@ -565,17 +565,13 @@
             // Convert **bold** to styled strong tags
             formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             
-            // Convert Day headers to styled day sections
-            formattedItinerary = formattedItinerary.replace(/^(Day \d+[^\n]*)/gm, '</div></div><div class="day-section"><h2>$1</h2>');
+            // Convert Day headers to proper headings
+            formattedItinerary = formattedItinerary.replace(/^(Day \d+[^\n]*)/gm, '<h2>$1</h2>');
             
-            // Convert time stamps to styled time blocks
-            formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '</div><div class="time-block"><h3>$1</h3><div class="activity-content">');
+            // Convert time stamps to subheadings with clock emoji
+            formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '<h3>$1</h3>');
             
-            // Clean up any loose opening div tags and ensure proper closing
-            formattedItinerary = formattedItinerary.replace(/^<\/div><\/div>/, '');
-            formattedItinerary += '</div></div>';
-            
-            contentElement.innerHTML = '<div class="itinerary-wrapper">' + formattedItinerary + '</div>';
+            contentElement.innerHTML = formattedItinerary;
         }
         
         function showShareModal() {
