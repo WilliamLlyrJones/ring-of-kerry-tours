@@ -131,15 +131,34 @@
         .itinerary-content h2 {
             color: #2d5a3d;
             font-size: 1.8em;
-            margin: 30px 0 15px 0;
-            border-bottom: 3px solid #4a7c59;
-            padding-bottom: 10px;
+            margin: 40px 0 20px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            border-left: 5px solid #4a7c59;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .itinerary-content h2:first-child {
+            margin-top: 0;
         }
         
         .itinerary-content h3 {
             color: #4a7c59;
-            font-size: 1.4em;
-            margin: 25px 0 10px 0;
+            font-size: 1.3em;
+            margin: 25px 0 15px 0;
+            padding: 15px 20px;
+            background: #f0f8ff;
+            border-radius: 10px;
+            border-left: 4px solid #007bff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .itinerary-content h3::before {
+            content: '🕒';
+            font-size: 1.1em;
         }
         
         .itinerary-content h4 {
@@ -151,10 +170,49 @@
         .itinerary-content p {
             margin-bottom: 15px;
             color: #444;
+            padding-left: 20px;
         }
         
         .itinerary-content strong {
             color: #2d5a3d;
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .day-section {
+            margin-bottom: 40px;
+            border: 1px solid #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .time-block {
+            background: #fff;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #f0f0f0;
+            overflow: hidden;
+        }
+        
+        .activity-content {
+            padding: 20px;
+            background: #fafafa;
+            border-left: 3px solid #4a7c59;
+            margin: 10px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .location-highlight {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            color: #2d5a3d;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0 3px;
+            border: 1px solid #d4edda;
         }
         
         .error-message {
@@ -500,12 +558,34 @@
             }
             
             var formattedItinerary = itinerary;
-            formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
-            formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            formattedItinerary = formattedItinerary.replace(/^(Day \d+[^\n]*)/gm, '<h2>$1</h2>');
-            formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '<h3>$1</h3>');
             
-            contentElement.innerHTML = formattedItinerary;
+            // Convert line breaks to HTML
+            formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
+            
+            // Convert **bold** to styled strong tags
+            formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Convert Day headers to styled day sections
+            formattedItinerary = formattedItinerary.replace(/^(Day \d+[^\n]*)/gm, '</div><div class="day-section"><h2>$1</h2>');
+            
+            // Convert time stamps to styled time blocks
+            formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '</div><div class="time-block"><h3>$1</h3><div class="activity-content">');
+            
+            // Highlight location names (words ending with common Irish place suffixes or starting with capital letters)
+            formattedItinerary = formattedItinerary.replace(/\b([A-Z][a-z]*(?:town|bridge|castle|abbey|point|head|bay|island|glen|more|beg))\b/g, '<span class="location-highlight">$1</span>');
+            
+            // Highlight well-known Kerry locations
+            var kerryLocations = ['Killarney', 'Kenmare', 'Sneem', 'Waterville', 'Cahersiveen', 'Portmagee', 'Valentia', 'Skellig', 'Dingle', 'Tralee', 'Kilorglin', 'Glenbeigh', 'Rossbeigh', 'Caherdaniel', 'Derrynane', 'Staigue', 'Parknasilla', 'Blackwater', 'Ladies View', 'Muckross', 'Torc', 'Gap of Dunloe', 'Ring of Kerry', 'Iveragh', 'Beara'];
+            kerryLocations.forEach(function(location) {
+                var regex = new RegExp('\\b(' + location + ')\\b', 'gi');
+                formattedItinerary = formattedItinerary.replace(regex, '<span class="location-highlight">$1</span>');
+            });
+            
+            // Clean up any loose opening div tags and ensure proper closing
+            formattedItinerary = formattedItinerary.replace(/^<\/div>/, '');
+            formattedItinerary += '</div></div>';
+            
+            contentElement.innerHTML = '<div class="itinerary-wrapper">' + formattedItinerary + '</div>';
         }
         
         function showShareModal() {
