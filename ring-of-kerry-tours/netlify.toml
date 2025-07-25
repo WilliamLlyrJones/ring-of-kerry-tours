@@ -1,33 +1,17 @@
 [build]
   functions = "netlify/functions"
   publish = "public"
-  command = ""
 
 [build.environment]
   NODE_VERSION = "18"
 
-# API routes to serverless functions
 [[redirects]]
   from = "/api/generate-itinerary"
   to = "/.netlify/functions/generate-itinerary"
   status = 200
 
-[[redirects]]
-  from = "/api/refine-itinerary"
-  to = "/.netlify/functions/refine-itinerary"
-  status = 200
-
-[[redirects]]
-  from = "/api/get-itinerary/*"
-  to = "/.netlify/functions/get-itinerary/:splat"
-  status = 200
-
-# Functions configuration
 [functions]
   node_bundler = "esbuild"
   
   [functions."generate-itinerary"]
-    timeout = 30
-    
-  [functions."refine-itinerary"]
     timeout = 30
