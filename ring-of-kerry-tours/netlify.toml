@@ -1,6 +1,6 @@
 [build]
-  functions = "ring-of-kerry-tours/netlify/functions"
-  publish = "ring-of-kerry-tours/public"
+  functions = "netlify/functions"
+  publish = "public"
   command = ""
 
 [build.environment]
