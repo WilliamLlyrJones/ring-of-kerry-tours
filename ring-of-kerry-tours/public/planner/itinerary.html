@@ -3,38 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ring of Kerry Test</title>
+    <title>Your Ring of Kerry Adventure - Personalized Itinerary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: #4a7c59;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #3d6449;
+        }
+    </style>
 </head>
 <body>
-    <div id="content">
-        <h1>Ring of Kerry Test Page</h1>
-        <div id="loading">Loading...</div>
-        <div id="error" style="display:none;">Error occurred</div>
-        <div id="main" style="display:none;">
-            <h2>Content loaded successfully</h2>
-            <button onclick="testFunction()">Test Button</button>
+    <div class="container">
+        <a href="/planner" style="color: #4a7c59; text-decoration: none;">← Back to Trip Planner</a>
+        
+        <div id="loadingState" class="loading">
+            <h2>Loading your itinerary...</h2>
+            <p>Please wait while we retrieve your personalized Ring of Kerry adventure.</p>
+        </div>
+        
+        <div id="errorState" class="error-message" style="display: none;">
+            <h2>Oops! Something went wrong</h2>
+            <p>We could not load your itinerary.</p>
+            <a href="/planner" class="btn">Start New Trip Plan</a>
+        </div>
+        
+        <div id="mainContent" style="display: none;">
+            <h1>🍀 Your Ring of Kerry Adventure</h1>
+            <div id="tripSummary">
+                <!-- Summary will be populated -->
+            </div>
+            <div id="itineraryContent">
+                <!-- Itinerary will be populated -->
+            </div>
         </div>
     </div>
 
     <script>
         console.log("Script starting");
         
-        function testFunction() {
-            console.log("Test function called");
-            alert("Test successful!");
-        }
+        var currentItinerary = null;
+        var currentUserData = null;
+        var itineraryId = null;
         
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM loaded");
-            
-            // Hide loading, show main
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('main').style.display = 'block';
-            
-            console.log("Initialization complete");
+            console.log("DOM loaded - starting loadItinerary");
+            loadItinerary();
         });
         
-        console.log("Script ended");
+        function loadItinerary() {
+            console.log("loadItinerary function called");
+            
+            try {
+                var urlParams = new URLSearchParams(window.location.search);
+                var sharedId = urlParams.get('id');
+                
+                if (sharedId) {
+                    console.log("Found shared ID: " + sharedId);
+                    loadSharedItinerary(sharedId);
+                    return;
+                }
+                
+                var itineraryData = sessionStorage.getItem('generatedItinerary');
+                var userData = sessionStorage.getItem('userData');
+                
+                console.log("Session storage check:");
+                console.log("Has itinerary: " + (!!itineraryData));
+                console.log("Has userData: " + (!!userData));
+                
+                if (!itineraryData || !userData) {
+                    console.log("No session data - showing error");
+                    showError();
+                    return;
+                }
+                
+                var itinerary = JSON.parse(itineraryData);
+                currentUserData = JSON.parse(userData);
+                currentItinerary = itinerary.itinerary || itinerary;
+                itineraryId = itinerary.itineraryId;
+                
+                console.log("Data parsed successfully");
+                displayItinerary();
+                
+            } catch (error) {
+                console.error("Error in loadItinerary: " + error.message);
+                showError();
+            }
+        }
+        
+        function loadSharedItinerary(id) {
+            console.log("loadSharedItinerary called with: " + id);
+            
+            fetch('/.netlify/functions/get-itinerary/' + id)
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Itinerary not found');
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    currentItinerary = data.itinerary.itineraryText;
+                    currentUserData = data.itinerary.userData;
+                    itineraryId = data.itinerary.id;
+                    
+                    console.log("Shared itinerary loaded");
+                    displayItinerary();
+                })
+                .catch(function(error) {
+                    console.error("Error loading shared itinerary: " + error.message);
+                    showError();
+                });
+        }
+        
+        function displayItinerary() {
+            console.log("displayItinerary called");
+            
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            populateSummary(currentUserData);
+            populateItinerary(currentItinerary);
+        }
+        
+        function showError() {
+            console.log("showError called");
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+        }
+        
+        function populateSummary(userData) {
+            console.log("populateSummary called");
+            
+            var summaryElement = document.getElementById('tripSummary');
+            var interests = userData && userData.interests ? userData.interests.join(', ') : 'general sightseeing';
+            
+            summaryElement.innerHTML = '<p><strong>' + userData.duration + '-Day Itinerary</strong> • ' + userData.travelMonth + ' 2025 • ' + userData.groupSize + ' people • €' + userData.budget + '/day budget</p><p>Interests: ' + interests + '</p>';
+        }
+        
+        function populateItinerary(itinerary) {
+            console.log("populateItinerary called");
+            
+            var contentElement = document.getElementById('itineraryContent');
+            
+            if (!itinerary) {
+                contentElement.innerHTML = '<p>No itinerary content available.</p>';
+                return;
+            }
+            
+            var formattedItinerary = itinerary;
+            formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
+            formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            contentElement.innerHTML = formattedItinerary;
+        }
+        
+        console.log("Script loaded successfully");
     </script>
 </body>
 </html>
