@@ -120,11 +120,6 @@
             color: #4a7c59;
         }
         
-        .itinerary-container {
-            display: grid;
-            gap: 30px;
-        }
-        
         .itinerary-content {
             background: white;
             border-radius: 20px;
@@ -158,15 +153,6 @@
             color: #444;
         }
         
-        .itinerary-content ul, .itinerary-content ol {
-            margin: 15px 0 15px 30px;
-        }
-        
-        .itinerary-content li {
-            margin-bottom: 8px;
-            color: #444;
-        }
-        
         .itinerary-content strong {
             color: #2d5a3d;
         }
@@ -178,10 +164,6 @@
             border-radius: 15px;
             text-align: center;
             margin: 40px 0;
-        }
-        
-        .error-message h2 {
-            margin-bottom: 10px;
         }
         
         .loading {
@@ -204,7 +186,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        .share-modal {
+        .modal {
             display: none;
             position: fixed;
             z-index: 1000;
@@ -215,7 +197,7 @@
             background-color: rgba(0,0,0,0.5);
         }
         
-        .share-modal-content {
+        .modal-content {
             background-color: white;
             margin: 15% auto;
             padding: 30px;
@@ -353,10 +335,8 @@
             </div>
             
             <!-- Itinerary content -->
-            <div class="itinerary-container">
-                <div class="itinerary-content" id="itineraryContent">
-                    <!-- Itinerary will be populated by JavaScript -->
-                </div>
+            <div class="itinerary-content" id="itineraryContent">
+                <!-- Itinerary will be populated by JavaScript -->
             </div>
             
             <!-- Pro tips section -->
@@ -374,8 +354,8 @@
         </div>
         
         <!-- Share Modal -->
-        <div id="shareModal" class="share-modal">
-            <div class="share-modal-content">
+        <div id="shareModal" class="modal">
+            <div class="modal-content">
                 <h3>Share Your Itinerary</h3>
                 <p>Copy this link to share your personalized Ring of Kerry itinerary:</p>
                 <div class="share-url" id="shareUrl">
@@ -389,8 +369,8 @@
         </div>
         
         <!-- Download Options Modal -->
-        <div id="downloadModal" class="share-modal">
-            <div class="share-modal-content">
+        <div id="downloadModal" class="modal">
+            <div class="modal-content">
                 <h3>Download Your Itinerary</h3>
                 <p>Choose your preferred format:</p>
                 <div class="download-options">
@@ -426,19 +406,19 @@
         let currentUserData = null;
         let itineraryId = null;
         
-        // Check if we have itinerary data
+        // Check if we have itinerary data when page loads
         window.addEventListener('DOMContentLoaded', function() {
             loadItinerary();
         });
         
         function loadItinerary() {
             try {
-                // Check URL parameters for shared itinerary
+                // Check URL parameters for shared itinerary first
                 const urlParams = new URLSearchParams(window.location.search);
                 const sharedId = urlParams.get('id');
                 
                 if (sharedId) {
-                    // Load shared itinerary
+                    console.log('Loading shared itinerary:', sharedId);
                     loadSharedItinerary(sharedId);
                     return;
                 }
@@ -447,16 +427,22 @@
                 const itineraryData = sessionStorage.getItem('generatedItinerary');
                 const userData = sessionStorage.getItem('userData');
                 
+                console.log('Checking session storage...');
+                console.log('Has itinerary data:', !!itineraryData);
+                console.log('Has user data:', !!userData);
+                
                 if (!itineraryData || !userData) {
+                    console.log('No session data found, showing error');
                     showError();
                     return;
                 }
                 
                 const itinerary = JSON.parse(itineraryData);
                 currentUserData = JSON.parse(userData);
-                currentItinerary = itinerary.itinerary;
+                currentItinerary = itinerary.itinerary || itinerary;
                 itineraryId = itinerary.itineraryId;
                 
+                console.log('Session data loaded successfully');
                 displayItinerary();
                 
             } catch (error) {
@@ -467,6 +453,7 @@
         
         async function loadSharedItinerary(id) {
             try {
+                console.log('Fetching shared itinerary:', id);
                 const response = await fetch(`/.netlify/functions/get-itinerary/${id}`);
                 
                 if (!response.ok) {
@@ -478,6 +465,7 @@
                 currentUserData = data.itinerary.userData;
                 itineraryId = data.itinerary.id;
                 
+                console.log('Shared itinerary loaded successfully');
                 displayItinerary();
                 
             } catch (error) {
@@ -487,6 +475,8 @@
         }
         
         function displayItinerary() {
+            console.log('Displaying itinerary...');
+            
             // Hide loading and show content
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
@@ -499,6 +489,7 @@
         }
         
         function showError() {
+            console.log('Showing error state');
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('errorState').style.display = 'block';
         }
@@ -516,8 +507,13 @@
         function populateItinerary(itinerary) {
             const contentElement = document.getElementById('itineraryContent');
             
+            if (!itinerary) {
+                contentElement.innerHTML = '<p>No itinerary content available.</p>';
+                return;
+            }
+            
             // Format the itinerary text with proper HTML
-            let formattedItinerary = itinerary || 'No itinerary content available';
+            let formattedItinerary = itinerary;
             
             // Convert line breaks to HTML
             formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
@@ -542,7 +538,7 @@
                 const url = `${window.location.origin}/planner/itinerary.html?id=${itineraryId}`;
                 shareUrl.textContent = url;
             } else {
-                shareUrl.textContent = 'Shareable link not available';
+                shareUrl.textContent = 'Shareable link not available for this itinerary';
             }
             
             modal.style.display = 'block';
@@ -571,7 +567,6 @@
         }
         
         function downloadAsPDF() {
-            // Create a clean PDF version
             const printContent = createPrintableContent();
             const newWindow = window.open('', '_blank');
             newWindow.document.write(`
@@ -656,6 +651,19 @@ Generated by Ring of Kerry Tours - ringofkerrytours.com`;
         
         function printItinerary() {
             window.print();
+        }
+        
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const shareModal = document.getElementById('shareModal');
+            const downloadModal = document.getElementById('downloadModal');
+            
+            if (event.target === shareModal) {
+                shareModal.style.display = 'none';
+            }
+            if (event.target === downloadModal) {
+                downloadModal.style.display = 'none';
+            }
         }
     </script>
 </body>
