@@ -1,7 +1,7 @@
 # netlify.toml - Netlify configuration for Ring of Kerry Tours
 
 [build]
-  functions = "netlify/functions"
+  functions = "ring-of-kerry-tours/netlify/functions"
   publish = "public"
   command = "npm run build"
 
