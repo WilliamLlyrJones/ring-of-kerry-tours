@@ -25,7 +25,6 @@ exports.handler = async (event, context) => {
     const body = JSON.parse(event.body);
     const userData = body.userData;
 
-    // Check if we have the API key
     if (!process.env.ANTHROPIC_API_KEY) {
       console.error('Missing ANTHROPIC_API_KEY');
       return {
@@ -38,7 +37,6 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Validate required fields
     const required = ['groupSize', 'duration', 'travelMonth', 'budget'];
     const missing = required.filter(field => !userData[field]);
     
@@ -54,27 +52,87 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Build prompt
-    const prompt = `Create a detailed ${userData.duration}-day Ring of Kerry itinerary for ${userData.groupSize} people visiting in ${userData.travelMonth}. Budget: €${userData.budget} per person per day. Interests: ${userData.interests?.join(', ') || 'general sightseeing'}. 
-
-Please include:
-- Day-by-day schedule with specific times
-- Exact locations and attractions
-- Restaurant recommendations with price ranges
-- Driving directions and distances
-- Weather backup plans
-- Photography tips
-- Local insider knowledge
-
-Make it detailed, practical, and personalized to their preferences.`;
+    const prompt = `Create a detailed ${userData.duration}-day Ring of Kerry itinerary for ${userData.groupSize} people visiting in ${userData.travelMonth}. Budget: €${userData.budget} per person per day. Interests: ${userData.interests?.join(', ') || 'general sightseeing'}. Include day-by-day schedule with specific times, exact locations, restaurant recommendations with prices, driving directions, and weather backup plans.`;
 
     console.log('Calling Claude API...');
 
-    // Call Claude API with correct model name
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 4000,
+        messages: [{
+          role: 'user',
+          content: prompt
+        }]
+      })
+    });
+
+    console.log('Claude API response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Claude API error response:', errorText);
+      
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: errorText };
       }
+
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'AI service error',
+          message: errorData.error?.message || 'Failed to generate itinerary'
+        })
+      };
+    }
+
+    const result = await response.json();
+    console.log('Claude API successful');
+
+    if (!result.content || !result.content[0] || !result.content[0].text) {
+      console.error('Unexpected Claude response format:', result);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Unexpected response format',
+          message: 'The AI service returned an unexpected response'
+        })
+      };
+    }
+
+    const itinerary = result.content[0].text;
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success: true,
+        itinerary,
+        userData
+      })
+    };
+
+  } catch (error) {
+    console.error('Function error:', error);
+
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        error: 'Internal server error',
+        message: error.message
+      })
+    };
+  }
+};
