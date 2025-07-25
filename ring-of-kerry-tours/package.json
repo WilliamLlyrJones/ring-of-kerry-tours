@@ -2,11 +2,9 @@
   "name": "ring-of-kerry-tours",
   "version": "1.0.0",
   "description": "AI-powered Ring of Kerry trip planner",
-  "type": "module",
   "scripts": {
     "build": "echo 'Build complete'",
-    "dev": "netlify dev",
-    "start": "netlify dev"
+    "dev": "netlify dev"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0"
