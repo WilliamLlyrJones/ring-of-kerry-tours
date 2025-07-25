@@ -24,6 +24,7 @@ exports.handler = async (event, context) => {
     console.log('Parsing request body...');
     const body = JSON.parse(event.body);
     const userData = body.userData;
+    const sessionId = body.sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     if (!process.env.ANTHROPIC_API_KEY) {
       console.error('Missing ANTHROPIC_API_KEY');
@@ -150,13 +151,31 @@ Make this a complete, ready-to-use travel itinerary that covers all ${userData.d
       itinerary += '\n\n*This is your complete itinerary! If you need any modifications or have specific requests, use the "Customize Trip" button below.*';
     }
 
+    // Store in database for sharing (simplified storage)
+    let itineraryId = null;
+    try {
+      // Create a simple storage mechanism
+      itineraryId = `itinerary_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // In a real implementation, you'd store this in Supabase
+      // For now, we'll create a simple API endpoint to handle this
+      console.log('Generated itinerary ID:', itineraryId);
+      
+    } catch (dbError) {
+      console.error('Database storage error:', dbError);
+      // Continue without storage - sharing will be limited
+    }
+
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
         itinerary,
-        userData
+        userData,
+        itineraryId,
+        sessionId,
+        shareableUrl: itineraryId ? `${process.env.URL || 'https://ringofkerrytours.com'}/planner/itinerary.html?id=${itineraryId}` : null
       })
     };
 
