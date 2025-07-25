@@ -566,23 +566,13 @@
             formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             
             // Convert Day headers to styled day sections
-            formattedItinerary = formattedItinerary.replace(/^(Day \d+[^\n]*)/gm, '</div><div class="day-section"><h2>$1</h2>');
+            formattedItinerary = formattedItinerary.replace(/^(Day \d+[^\n]*)/gm, '</div></div><div class="day-section"><h2>$1</h2>');
             
             // Convert time stamps to styled time blocks
             formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '</div><div class="time-block"><h3>$1</h3><div class="activity-content">');
             
-            // Highlight location names (words ending with common Irish place suffixes or starting with capital letters)
-            formattedItinerary = formattedItinerary.replace(/\b([A-Z][a-z]*(?:town|bridge|castle|abbey|point|head|bay|island|glen|more|beg))\b/g, '<span class="location-highlight">$1</span>');
-            
-            // Highlight well-known Kerry locations
-            var kerryLocations = ['Killarney', 'Kenmare', 'Sneem', 'Waterville', 'Cahersiveen', 'Portmagee', 'Valentia', 'Skellig', 'Dingle', 'Tralee', 'Kilorglin', 'Glenbeigh', 'Rossbeigh', 'Caherdaniel', 'Derrynane', 'Staigue', 'Parknasilla', 'Blackwater', 'Ladies View', 'Muckross', 'Torc', 'Gap of Dunloe', 'Ring of Kerry', 'Iveragh', 'Beara'];
-            kerryLocations.forEach(function(location) {
-                var regex = new RegExp('\\b(' + location + ')\\b', 'gi');
-                formattedItinerary = formattedItinerary.replace(regex, '<span class="location-highlight">$1</span>');
-            });
-            
             // Clean up any loose opening div tags and ensure proper closing
-            formattedItinerary = formattedItinerary.replace(/^<\/div>/, '');
+            formattedItinerary = formattedItinerary.replace(/^<\/div><\/div>/, '');
             formattedItinerary += '</div></div>';
             
             contentElement.innerHTML = '<div class="itinerary-wrapper">' + formattedItinerary + '</div>';
