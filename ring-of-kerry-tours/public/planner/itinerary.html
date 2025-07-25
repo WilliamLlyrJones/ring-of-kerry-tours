@@ -37,9 +37,69 @@
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
+            margin: 5px;
         }
         .btn:hover {
             background: #3d6449;
+        }
+        .btn-secondary {
+            background: white;
+            color: #4a7c59;
+            border: 2px solid #4a7c59;
+        }
+        .btn-secondary:hover {
+            background: #4a7c59;
+            color: white;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+        .share-url {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+        }
+        .download-options {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .download-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .download-option:hover {
+            border-color: #4a7c59;
+            background-color: #f8f9fa;
         }
     </style>
 </head>
@@ -63,8 +123,62 @@
             <div id="tripSummary">
                 <!-- Summary will be populated -->
             </div>
+            
+            <div class="controls">
+                <button class="btn" onclick="showDownloadOptions()">📱 Download Itinerary</button>
+                <button class="btn btn-secondary" onclick="showShareModal()">📤 Share</button>
+                <button class="btn btn-secondary" onclick="printItinerary()">🖨️ Print</button>
+            </div>
+            
             <div id="itineraryContent">
                 <!-- Itinerary will be populated -->
+            </div>
+        </div>
+        
+        <!-- Share Modal -->
+        <div id="shareModal" class="modal">
+            <div class="modal-content">
+                <h3>Share Your Itinerary</h3>
+                <p>Copy this link to share your personalized Ring of Kerry itinerary:</p>
+                <div class="share-url" id="shareUrl">
+                    <!-- URL will be populated -->
+                </div>
+                <div>
+                    <button class="btn" onclick="copyShareLink()">Copy Link</button>
+                    <button class="btn btn-secondary" onclick="closeShareModal()">Close</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Download Options Modal -->
+        <div id="downloadModal" class="modal">
+            <div class="modal-content">
+                <h3>Download Your Itinerary</h3>
+                <p>Choose your preferred format:</p>
+                <div class="download-options">
+                    <div class="download-option" onclick="downloadAsPDF()">
+                        <div>
+                            <strong>📄 PDF Document</strong>
+                            <div style="font-size: 0.9em; color: #666;">Professional format, easy to print</div>
+                        </div>
+                        <span>→</span>
+                    </div>
+                    <div class="download-option" onclick="downloadAsText()">
+                        <div>
+                            <strong>📝 Text File</strong>
+                            <div style="font-size: 0.9em; color: #666;">Simple text format, works everywhere</div>
+                        </div>
+                        <span>→</span>
+                    </div>
+                    <div class="download-option" onclick="emailItinerary()">
+                        <div>
+                            <strong>📧 Email to Myself</strong>
+                            <div style="font-size: 0.9em; color: #666;">Send to your email address</div>
+                        </div>
+                        <span>→</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="closeDownloadModal()">Close</button>
             </div>
         </div>
     </div>
@@ -186,6 +300,136 @@
             
             contentElement.innerHTML = formattedItinerary;
         }
+        
+        function showShareModal() {
+            console.log("showShareModal called");
+            var modal = document.getElementById('shareModal');
+            var shareUrl = document.getElementById('shareUrl');
+            
+            if (itineraryId) {
+                var url = window.location.origin + '/planner/itinerary.html?id=' + itineraryId;
+                shareUrl.textContent = url;
+            } else {
+                shareUrl.textContent = 'Shareable link not available for this itinerary';
+            }
+            
+            modal.style.display = 'block';
+        }
+        
+        function closeShareModal() {
+            document.getElementById('shareModal').style.display = 'none';
+        }
+        
+        function copyShareLink() {
+            var shareUrl = document.getElementById('shareUrl').textContent;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareUrl).then(function() {
+                    alert('Link copied to clipboard!');
+                    closeShareModal();
+                }).catch(function() {
+                    alert('Unable to copy link. Please copy manually.');
+                });
+            } else {
+                alert('Unable to copy link. Please copy manually.');
+            }
+        }
+        
+        function showDownloadOptions() {
+            console.log("showDownloadOptions called");
+            document.getElementById('downloadModal').style.display = 'block';
+        }
+        
+        function closeDownloadModal() {
+            document.getElementById('downloadModal').style.display = 'none';
+        }
+        
+        function downloadAsPDF() {
+            console.log("downloadAsPDF called");
+            var printContent = createPrintableContent();
+            var newWindow = window.open('', '_blank');
+            if (newWindow) {
+                var htmlContent = '<!DOCTYPE html><html><head><title>Ring of Kerry Itinerary</title><style>body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; } h1 { color: #2d5a3d; text-align: center; } h2 { color: #4a7c59; border-bottom: 2px solid #4a7c59; padding-bottom: 5px; } h3 { color: #2d5a3d; } .summary { background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; }</style></head><body>' + printContent + '</body></html>';
+                newWindow.document.write(htmlContent);
+                newWindow.document.close();
+                newWindow.print();
+            }
+            closeDownloadModal();
+        }
+        
+        function downloadAsText() {
+            console.log("downloadAsText called");
+            var textContent = createTextContent();
+            var blob = new Blob([textContent], { type: 'text/plain' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'ring-of-kerry-itinerary.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            closeDownloadModal();
+        }
+        
+        function emailItinerary() {
+            console.log("emailItinerary called");
+            var textContent = createTextContent();
+            var subject = encodeURIComponent('My Ring of Kerry Itinerary');
+            var body = encodeURIComponent(textContent);
+            var mailtoLink = 'mailto:?subject=' + subject + '&body=' + body;
+            window.location.href = mailtoLink;
+            closeDownloadModal();
+        }
+        
+        function createPrintableContent() {
+            var userData = currentUserData;
+            var interests = userData && userData.interests ? userData.interests.join(', ') : 'general sightseeing';
+            
+            var content = '<h1>🍀 Your Ring of Kerry Adventure</h1>';
+            content += '<div class="summary">';
+            content += '<strong>' + userData.duration + '-Day Itinerary</strong> • ' + userData.travelMonth + ' 2025 • ' + userData.groupSize + ' people • €' + userData.budget + '/day budget<br>';
+            content += 'Interests: ' + interests;
+            content += '</div>';
+            content += document.getElementById('itineraryContent').innerHTML;
+            content += '<hr style="margin: 30px 0;">';
+            content += '<p><em>Generated by Ring of Kerry Tours - ringofkerrytours.com</em></p>';
+            
+            return content;
+        }
+        
+        function createTextContent() {
+            var userData = currentUserData;
+            var interests = userData && userData.interests ? userData.interests.join(', ') : 'general sightseeing';
+            
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = currentItinerary;
+            var plainText = tempDiv.textContent || tempDiv.innerText || '';
+            
+            var content = 'RING OF KERRY ADVENTURE\n';
+            content += userData.duration + '-Day Itinerary • ' + userData.travelMonth + ' 2025 • ' + userData.groupSize + ' people • €' + userData.budget + '/day budget\n';
+            content += 'Interests: ' + interests + '\n\n';
+            content += plainText + '\n\n';
+            content += 'Generated by Ring of Kerry Tours - ringofkerrytours.com';
+            
+            return content;
+        }
+        
+        function printItinerary() {
+            console.log("printItinerary called");
+            window.print();
+        }
+        
+        window.onclick = function(event) {
+            var shareModal = document.getElementById('shareModal');
+            var downloadModal = document.getElementById('downloadModal');
+            
+            if (event.target === shareModal) {
+                shareModal.style.display = 'none';
+            }
+            if (event.target === downloadModal) {
+                downloadModal.style.display = 'none';
+            }
+        };
         
         console.log("Script loaded successfully");
     </script>
