@@ -558,33 +558,26 @@
                 return;
             }
             
-            // Log the raw itinerary to see what we're working with
-            console.log("Raw itinerary:", itinerary.substring(0, 200));
-            
             var formattedItinerary = itinerary;
             
-            // Convert line breaks to HTML
-            formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
-            
-            // Convert **bold** to styled strong tags
+            // First, convert **bold** to styled strong tags (before adding <br> tags)
             formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             
-            // Convert "DAY X:" patterns to h2 headers
-            formattedItinerary = formattedItinerary.replace(/^(DAY \d+[^<]*?)(<br>|$)/gm, '<h2>$1</h2>');
+            // Convert "DAY X:" patterns to h2 headers (before <br> conversion)
+            formattedItinerary = formattedItinerary.replace(/^(DAY \d+[^\n]*)/gm, '<h2>$1</h2>');
             
-            // Convert "MORNING:", "AFTERNOON:", "EVENING:" to h3 headers
-            formattedItinerary = formattedItinerary.replace(/^(MORNING|AFTERNOON|EVENING):(<br>|$)/gm, '<h3>$1</h3>');
+            // Convert "MORNING:", "AFTERNOON:", "EVENING:" to h3 headers (before <br> conversion)
+            formattedItinerary = formattedItinerary.replace(/^(MORNING|AFTERNOON|EVENING):$/gm, '<h3>$1</h3>');
             
-            // Convert time patterns like "8:00 AM", "10:30 AM" etc to h3 headers
-            formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^<]*?)(<br>|$)/gm, '<h3>🕒 $1</h3>');
+            // Convert time patterns like "8:00 AM" etc to h3 headers (before <br> conversion)
+            formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '<h3>🕒 $1</h3>');
             
-            // Log the formatted result
+            // Now convert line breaks to HTML
+            formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
+            
             console.log("Formatted itinerary:", formattedItinerary.substring(0, 500));
             
             contentElement.innerHTML = formattedItinerary;
-            
-            // Log what's actually in the DOM
-            console.log("DOM content:", contentElement.innerHTML.substring(0, 500));
         }
         
         function showShareModal() {
