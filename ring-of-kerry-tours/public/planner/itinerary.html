@@ -307,7 +307,7 @@
         <!-- Error State -->
         <div id="errorState" class="error-message" style="display: none;">
             <h2>Oops! Something went wrong</h2>
-            <p>We couldn't load your itinerary. This might happen if you navigated directly to this page without completing the questionnaire.</p>
+            <p id="errorMessage">We couldn't load your itinerary. This might happen if you navigated directly to this page without completing the questionnaire.</p>
             <a href="/planner" class="btn btn-primary" style="margin-top: 15px;">Start New Trip Plan</a>
         </div>
         
@@ -402,17 +402,30 @@
     </div>
 
     <script>
+        // Initialize variables with safe defaults
         let currentItinerary = null;
         let currentUserData = null;
         let itineraryId = null;
         
+        // Default user data structure to prevent errors
+        const defaultUserData = {
+            duration: '3',
+            travelMonth: 'June',
+            groupSize: '2',
+            budget: '100',
+            interests: ['sightseeing']
+        };
+        
         // Check if we have itinerary data when page loads
         window.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, starting itinerary load...');
             loadItinerary();
         });
         
         function loadItinerary() {
             try {
+                console.log('Starting loadItinerary function...');
+                
                 // Check URL parameters for shared itinerary first
                 const urlParams = new URLSearchParams(window.location.search);
                 const sharedId = urlParams.get('id');
@@ -433,36 +446,71 @@
                 
                 if (!itineraryData || !userData) {
                     console.log('No session data found, showing error');
-                    showError();
+                    showError('No itinerary data found. Please complete the trip planner first.');
                     return;
                 }
                 
-                const itinerary = JSON.parse(itineraryData);
-                currentUserData = JSON.parse(userData);
-                currentItinerary = itinerary.itinerary || itinerary;
-                itineraryId = itinerary.itineraryId;
+                // Parse data with error handling
+                try {
+                    const itinerary = JSON.parse(itineraryData);
+                    currentUserData = JSON.parse(userData);
+                    currentItinerary = itinerary.itinerary || itinerary;
+                    itineraryId = itinerary.itineraryId;
+                    
+                    console.log('Session data parsed successfully');
+                    console.log('Current user data:', currentUserData);
+                    console.log('Has itinerary content:', !!currentItinerary);
+                    
+                } catch (parseError) {
+                    console.error('Error parsing session data:', parseError);
+                    showError('Error reading itinerary data. Please try generating a new itinerary.');
+                    return;
+                }
                 
-                console.log('Session data loaded successfully');
+                // Validate data before displaying
+                if (!currentItinerary || !currentUserData) {
+                    console.error('Invalid data structure');
+                    showError('Invalid itinerary data. Please generate a new itinerary.');
+                    return;
+                }
+                
+                console.log('Data validation passed, displaying itinerary');
                 displayItinerary();
                 
             } catch (error) {
-                console.error('Error loading itinerary:', error);
-                showError();
+                console.error('Error in loadItinerary:', error);
+                showError('An unexpected error occurred. Please try again.');
             }
         }
         
         async function loadSharedItinerary(id) {
             try {
                 console.log('Fetching shared itinerary:', id);
-                const response = await fetch(`/.netlify/functions/get-itinerary/${id}`);
+                
+                // Check if the endpoint exists first
+                const response = await fetch(`/.netlify/functions/get-itinerary/${id}`)
+                    .catch(err => {
+                        console.error('Network error:', err);
+                        throw new Error('Unable to connect to server');
+                    });
                 
                 if (!response.ok) {
-                    throw new Error('Itinerary not found');
+                    if (response.status === 404) {
+                        throw new Error('Itinerary not found or has expired');
+                    } else {
+                        throw new Error(`Server error: ${response.status}`);
+                    }
                 }
                 
                 const data = await response.json();
+                
+                // Validate response data
+                if (!data || !data.itinerary) {
+                    throw new Error('Invalid response data');
+                }
+                
                 currentItinerary = data.itinerary.itineraryText;
-                currentUserData = data.itinerary.userData;
+                currentUserData = data.itinerary.userData || defaultUserData;
                 itineraryId = data.itinerary.id;
                 
                 console.log('Shared itinerary loaded successfully');
@@ -470,199 +518,353 @@
                 
             } catch (error) {
                 console.error('Error loading shared itinerary:', error);
-                showError();
+                showError(`Unable to load shared itinerary: ${error.message}`);
             }
         }
         
         function displayItinerary() {
-            console.log('Displaying itinerary...');
-            
-            // Hide loading and show content
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-            
-            // Populate summary
-            populateSummary(currentUserData);
-            
-            // Populate itinerary content
-            populateItinerary(currentItinerary);
+            try {
+                console.log('Displaying itinerary...');
+                
+                // Hide loading and show content
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                
+                // Populate summary with safe data
+                populateSummary(currentUserData || defaultUserData);
+                
+                // Populate itinerary content
+                populateItinerary(currentItinerary);
+                
+            } catch (error) {
+                console.error('Error displaying itinerary:', error);
+                showError('Error displaying itinerary content.');
+            }
         }
         
-        function showError() {
-            console.log('Showing error state');
+        function showError(message = 'An error occurred') {
+            console.log('Showing error state:', message);
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('errorState').style.display = 'block';
+            
+            const errorMessageElement = document.getElementById('errorMessage');
+            if (errorMessageElement) {
+                errorMessageElement.textContent = message;
+            }
         }
         
         function populateSummary(userData) {
-            const summaryElement = document.getElementById('tripSummary');
-            const interests = userData.interests?.join(', ') || 'general sightseeing';
-            
-            summaryElement.innerHTML = `
-                <strong>${userData.duration}-Day Itinerary</strong> • ${userData.travelMonth} 2025 • ${userData.groupSize} people • €${userData.budget}/day budget
-                <br>Interests: ${interests}
-            `;
+            try {
+                const summaryElement = document.getElementById('tripSummary');
+                if (!summaryElement) {
+                    console.error('Summary element not found');
+                    return;
+                }
+                
+                // Use safe defaults if data is missing
+                const safeUserData = {
+                    duration: userData?.duration || '3',
+                    travelMonth: userData?.travelMonth || 'June',
+                    groupSize: userData?.groupSize || '2',
+                    budget: userData?.budget || '100',
+                    interests: userData?.interests || ['sightseeing']
+                };
+                
+                const interests = Array.isArray(safeUserData.interests) 
+                    ? safeUserData.interests.join(', ') 
+                    : 'general sightseeing';
+                
+                summaryElement.innerHTML = `
+                    <strong>${safeUserData.duration}-Day Itinerary</strong> • ${safeUserData.travelMonth} 2025 • ${safeUserData.groupSize} people • €${safeUserData.budget}/day budget
+                    <br>Interests: ${interests}
+                `;
+                
+            } catch (error) {
+                console.error('Error populating summary:', error);
+            }
         }
         
         function populateItinerary(itinerary) {
-            const contentElement = document.getElementById('itineraryContent');
-            
-            if (!itinerary) {
-                contentElement.innerHTML = '<p>No itinerary content available.</p>';
-                return;
+            try {
+                const contentElement = document.getElementById('itineraryContent');
+                if (!contentElement) {
+                    console.error('Content element not found');
+                    return;
+                }
+                
+                if (!itinerary || typeof itinerary !== 'string') {
+                    contentElement.innerHTML = '<p>No itinerary content available. Please generate a new itinerary.</p>';
+                    return;
+                }
+                
+                // Format the itinerary text with proper HTML
+                let formattedItinerary = itinerary;
+                
+                // Convert line breaks to HTML
+                formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
+                
+                // Convert **bold** to <strong>
+                formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                
+                // Convert Day headers to proper headings
+                formattedItinerary = formattedItinerary.replace(/^(Day \d+[^\n]*)/gm, '<h2>$1</h2>');
+                
+                // Convert time stamps to subheadings
+                formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '<h3>$1</h3>');
+                
+                contentElement.innerHTML = formattedItinerary;
+                
+            } catch (error) {
+                console.error('Error populating itinerary:', error);
+                const contentElement = document.getElementById('itineraryContent');
+                if (contentElement) {
+                    contentElement.innerHTML = '<p>Error displaying itinerary content.</p>';
+                }
             }
-            
-            // Format the itinerary text with proper HTML
-            let formattedItinerary = itinerary;
-            
-            // Convert line breaks to HTML
-            formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
-            
-            // Convert **bold** to <strong>
-            formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            
-            // Convert Day headers to proper headings
-            formattedItinerary = formattedItinerary.replace(/^(Day \d+[^\n]*)/gm, '<h2>$1</h2>');
-            
-            // Convert time stamps to subheadings
-            formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '<h3>$1</h3>');
-            
-            contentElement.innerHTML = formattedItinerary;
         }
         
         function showShareModal() {
-            const modal = document.getElementById('shareModal');
-            const shareUrl = document.getElementById('shareUrl');
-            
-            if (itineraryId) {
-                const url = `${window.location.origin}/planner/itinerary.html?id=${itineraryId}`;
-                shareUrl.textContent = url;
-            } else {
-                shareUrl.textContent = 'Shareable link not available for this itinerary';
+            try {
+                const modal = document.getElementById('shareModal');
+                const shareUrl = document.getElementById('shareUrl');
+                
+                if (!modal || !shareUrl) {
+                    console.error('Share modal elements not found');
+                    return;
+                }
+                
+                if (itineraryId) {
+                    const url = `${window.location.origin}/planner/itinerary.html?id=${itineraryId}`;
+                    shareUrl.textContent = url;
+                } else {
+                    shareUrl.textContent = 'Shareable link not available for this itinerary';
+                }
+                
+                modal.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error showing share modal:', error);
             }
-            
-            modal.style.display = 'block';
         }
         
         function closeShareModal() {
-            document.getElementById('shareModal').style.display = 'none';
+            try {
+                const modal = document.getElementById('shareModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error closing share modal:', error);
+            }
         }
         
         function copyShareLink() {
-            const shareUrl = document.getElementById('shareUrl').textContent;
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('Link copied to clipboard!');
-                closeShareModal();
-            }).catch(() => {
+            try {
+                const shareUrl = document.getElementById('shareUrl');
+                if (!shareUrl) {
+                    alert('Unable to copy link.');
+                    return;
+                }
+                
+                const url = shareUrl.textContent;
+                
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        alert('Link copied to clipboard!');
+                        closeShareModal();
+                    }).catch(() => {
+                        alert('Unable to copy link. Please copy manually.');
+                    });
+                } else {
+                    // Fallback for older browsers
+                    alert('Please copy the link manually: ' + url);
+                }
+                
+            } catch (error) {
+                console.error('Error copying share link:', error);
                 alert('Unable to copy link. Please copy manually.');
-            });
+            }
         }
         
         function showDownloadOptions() {
-            document.getElementById('downloadModal').style.display = 'block';
+            try {
+                const modal = document.getElementById('downloadModal');
+                if (modal) {
+                    modal.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error showing download modal:', error);
+            }
         }
         
         function closeDownloadModal() {
-            document.getElementById('downloadModal').style.display = 'none';
+            try {
+                const modal = document.getElementById('downloadModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error closing download modal:', error);
+            }
         }
         
         function downloadAsPDF() {
-            const printContent = createPrintableContent();
-            const newWindow = window.open('', '_blank');
-            newWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Ring of Kerry Itinerary</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-                        h1 { color: #2d5a3d; text-align: center; }
-                        h2 { color: #4a7c59; border-bottom: 2px solid #4a7c59; padding-bottom: 5px; }
-                        h3 { color: #2d5a3d; }
-                        .summary { background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; }
-                        @media print { body { margin: 20px; } }
-                    </style>
-                </head>
-                <body>
-                    ${printContent}
-                    <script>window.print(); window.close();</script>
-                </body>
-                </html>
-            `);
-            closeDownloadModal();
+            try {
+                const printContent = createPrintableContent();
+                const newWindow = window.open('', '_blank');
+                
+                if (!newWindow) {
+                    alert('Please allow pop-ups to download the PDF.');
+                    return;
+                }
+                
+                newWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Ring of Kerry Itinerary</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                            h1 { color: #2d5a3d; text-align: center; }
+                            h2 { color: #4a7c59; border-bottom: 2px solid #4a7c59; padding-bottom: 5px; }
+                            h3 { color: #2d5a3d; }
+                            .summary { background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; }
+                            @media print { body { margin: 20px; } }
+                        </style>
+                    </head>
+                    <body>
+                        ${printContent}
+                        <script>window.print(); window.close();</script>
+                    </body>
+                    </html>
+                `);
+                closeDownloadModal();
+                
+            } catch (error) {
+                console.error('Error downloading PDF:', error);
+                alert('Error creating PDF. Please try again.');
+                closeDownloadModal();
+            }
         }
         
         function downloadAsText() {
-            const textContent = createTextContent();
-            const blob = new Blob([textContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'ring-of-kerry-itinerary.txt';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            closeDownloadModal();
+            try {
+                const textContent = createTextContent();
+                const blob = new Blob([textContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ring-of-kerry-itinerary.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                closeDownloadModal();
+                
+            } catch (error) {
+                console.error('Error downloading text file:', error);
+                alert('Error creating text file. Please try again.');
+                closeDownloadModal();
+            }
         }
         
         function emailItinerary() {
-            const textContent = createTextContent();
-            const subject = encodeURIComponent('My Ring of Kerry Itinerary');
-            const body = encodeURIComponent(textContent);
-            const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
-            window.location.href = mailtoLink;
-            closeDownloadModal();
+            try {
+                const textContent = createTextContent();
+                const subject = encodeURIComponent('My Ring of Kerry Itinerary');
+                const body = encodeURIComponent(textContent);
+                const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+                window.location.href = mailtoLink;
+                closeDownloadModal();
+                
+            } catch (error) {
+                console.error('Error opening email:', error);
+                alert('Error opening email. Please try again.');
+                closeDownloadModal();
+            }
         }
         
         function createPrintableContent() {
-            const userData = currentUserData;
-            const interests = userData.interests?.join(', ') || 'general sightseeing';
-            
-            return `
-                <h1>🍀 Your Ring of Kerry Adventure</h1>
-                <div class="summary">
-                    <strong>${userData.duration}-Day Itinerary</strong> • ${userData.travelMonth} 2025 • ${userData.groupSize} people • €${userData.budget}/day budget<br>
-                    Interests: ${interests}
-                </div>
-                ${document.getElementById('itineraryContent').innerHTML}
-                <hr style="margin: 30px 0;">
-                <p><em>Generated by Ring of Kerry Tours - ringofkerrytours.com</em></p>
-            `;
+            try {
+                const userData = currentUserData || defaultUserData;
+                const interests = Array.isArray(userData.interests) 
+                    ? userData.interests.join(', ') 
+                    : 'general sightseeing';
+                
+                const itineraryElement = document.getElementById('itineraryContent');
+                const itineraryHTML = itineraryElement ? itineraryElement.innerHTML : 'Itinerary content not available';
+                
+                return `
+                    <h1>🍀 Your Ring of Kerry Adventure</h1>
+                    <div class="summary">
+                        <strong>${userData.duration}-Day Itinerary</strong> • ${userData.travelMonth} 2025 • ${userData.groupSize} people • €${userData.budget}/day budget<br>
+                        Interests: ${interests}
+                    </div>
+                    ${itineraryHTML}
+                    <hr style="margin: 30px 0;">
+                    <p><em>Generated by Ring of Kerry Tours - ringofkerrytours.com</em></p>
+                `;
+                
+            } catch (error) {
+                console.error('Error creating printable content:', error);
+                return '<p>Error creating printable content.</p>';
+            }
         }
         
         function createTextContent() {
-            const userData = currentUserData;
-            const interests = userData.interests?.join(', ') || 'general sightseeing';
-            
-            // Convert HTML to plain text
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = currentItinerary;
-            const plainText = tempDiv.textContent || tempDiv.innerText || '';
-            
-            return `RING OF KERRY ADVENTURE
+            try {
+                const userData = currentUserData || defaultUserData;
+                const interests = Array.isArray(userData.interests) 
+                    ? userData.interests.join(', ') 
+                    : 'general sightseeing';
+                
+                // Convert HTML to plain text safely
+                let plainText = '';
+                if (currentItinerary && typeof currentItinerary === 'string') {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = currentItinerary;
+                    plainText = tempDiv.textContent || tempDiv.innerText || currentItinerary;
+                } else {
+                    plainText = 'Itinerary content not available';
+                }
+                
+                return `RING OF KERRY ADVENTURE
 ${userData.duration}-Day Itinerary • ${userData.travelMonth} 2025 • ${userData.groupSize} people • €${userData.budget}/day budget
 Interests: ${interests}
 
 ${plainText}
 
 Generated by Ring of Kerry Tours - ringofkerrytours.com`;
+                
+            } catch (error) {
+                console.error('Error creating text content:', error);
+                return 'Error creating text content.';
+            }
         }
         
         function printItinerary() {
-            window.print();
+            try {
+                window.print();
+            } catch (error) {
+                console.error('Error printing:', error);
+                alert('Error printing. Please try again.');
+            }
         }
         
         // Close modals when clicking outside
         window.onclick = function(event) {
-            const shareModal = document.getElementById('shareModal');
-            const downloadModal = document.getElementById('downloadModal');
-            
-            if (event.target === shareModal) {
-                shareModal.style.display = 'none';
-            }
-            if (event.target === downloadModal) {
-                downloadModal.style.display = 'none';
+            try {
+                const shareModal = document.getElementById('shareModal');
+                const downloadModal = document.getElementById('downloadModal');
+                
+                if (event.target === shareModal && shareModal) {
+                    shareModal.style.display = 'none';
+                }
+                if (event.target === downloadModal && downloadModal) {
+                    downloadModal.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error handling modal click:', error);
             }
         }
     </script>
