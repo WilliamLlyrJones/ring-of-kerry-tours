@@ -204,67 +204,57 @@
             100% { transform: rotate(360deg); }
         }
         
-        .refinement-panel {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            margin-top: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .refinement-panel h3 {
-            color: #2d5a3d;
-            margin-bottom: 20px;
-        }
-        
-        .feedback-form {
-            display: grid;
-            gap: 20px;
-        }
-        
-        .feedback-textarea {
+        .share-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
             width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .share-modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .share-url {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+        }
+        
+        .download-options {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .download-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             padding: 15px;
             border: 2px solid #e0e0e0;
-            border-radius: 15px;
-            font-family: inherit;
-            font-size: 16px;
-            resize: vertical;
-            min-height: 120px;
-        }
-        
-        .feedback-textarea:focus {
-            outline: none;
-            border-color: #4a7c59;
-            box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.1);
-        }
-        
-        .quick-suggestions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .suggestion-btn {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 20px;
-            padding: 8px 16px;
-            font-size: 0.9em;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
         
-        .suggestion-btn:hover {
-            background: #4a7c59;
-            color: white;
+        .download-option:hover {
             border-color: #4a7c59;
-        }
-        
-        .loading-refinement {
-            display: none;
-            text-align: center;
-            padding: 40px;
+            background-color: #f8f9fa;
         }
         
         .tips-section {
@@ -351,13 +341,10 @@
             
             <!-- Control buttons -->
             <div class="controls">
-                <button class="btn btn-primary" onclick="downloadItinerary()">
+                <button class="btn btn-primary" onclick="showDownloadOptions()">
                     📱 Download Itinerary
                 </button>
-                <button class="btn btn-secondary" onclick="showRefinementPanel()">
-                    ✏️ Customize Trip
-                </button>
-                <button class="btn btn-outline" onclick="shareItinerary()">
+                <button class="btn btn-secondary" onclick="showShareModal()">
                     📤 Share
                 </button>
                 <button class="btn btn-outline" onclick="printItinerary()">
@@ -384,45 +371,61 @@
                     <li><strong>Tipping:</strong> 10-15% is standard for good service in restaurants.</li>
                 </ul>
             </div>
-            
-            <!-- Refinement panel -->
-            <div class="refinement-panel" id="refinementPanel" style="display: none;">
-                <h3>Customize Your Itinerary</h3>
-                <p style="color: #666; margin-bottom: 20px;">Tell us what you'd like to change and we'll update your itinerary accordingly.</p>
-                
-                <div class="feedback-form">
-                    <textarea 
-                        class="feedback-textarea" 
-                        id="feedbackText"
-                        placeholder="For example: 'This feels too rushed - can we spend more time in fewer places?' or 'We'd prefer more traditional music venues' or 'Add more indoor activities for rainy weather'..."
-                    ></textarea>
-                    
-                    <div>
-                        <p style="margin-bottom: 10px; font-weight: 600;">Quick suggestions:</p>
-                        <div class="quick-suggestions">
-                            <button class="suggestion-btn" onclick="addSuggestion('Add more indoor activities for bad weather')">More indoor options</button>
-                            <button class="suggestion-btn" onclick="addSuggestion('Less driving, more time at each location')">Less driving</button>
-                            <button class="suggestion-btn" onclick="addSuggestion('Include more traditional music venues')">More music venues</button>
-                            <button class="suggestion-btn" onclick="addSuggestion('Add more authentic local restaurants')">Local dining</button>
-                            <button class="suggestion-btn" onclick="addSuggestion('Include shopping for Irish crafts')">Shopping opportunities</button>
+        </div>
+        
+        <!-- Share Modal -->
+        <div id="shareModal" class="share-modal">
+            <div class="share-modal-content">
+                <h3>Share Your Itinerary</h3>
+                <p>Copy this link to share your personalized Ring of Kerry itinerary:</p>
+                <div class="share-url" id="shareUrl">
+                    <!-- URL will be populated by JavaScript -->
+                </div>
+                <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="copyShareLink()">Copy Link</button>
+                    <button class="btn btn-outline" onclick="closeShareModal()">Close</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Download Options Modal -->
+        <div id="downloadModal" class="share-modal">
+            <div class="share-modal-content">
+                <h3>Download Your Itinerary</h3>
+                <p>Choose your preferred format:</p>
+                <div class="download-options">
+                    <div class="download-option" onclick="downloadAsPDF()">
+                        <div>
+                            <strong>📄 PDF Document</strong>
+                            <div style="font-size: 0.9em; color: #666;">Professional format, easy to print</div>
                         </div>
+                        <span>→</span>
                     </div>
-                    
-                    <div style="display: flex; gap: 15px;">
-                        <button class="btn btn-primary" onclick="submitRefinement()">Update My Itinerary</button>
-                        <button class="btn btn-outline" onclick="hideRefinementPanel()">Cancel</button>
+                    <div class="download-option" onclick="downloadAsText()">
+                        <div>
+                            <strong>📝 Text File</strong>
+                            <div style="font-size: 0.9em; color: #666;">Simple text format, works everywhere</div>
+                        </div>
+                        <span>→</span>
+                    </div>
+                    <div class="download-option" onclick="emailItinerary()">
+                        <div>
+                            <strong>📧 Email to Myself</strong>
+                            <div style="font-size: 0.9em; color: #666;">Send to your email address</div>
+                        </div>
+                        <span>→</span>
                     </div>
                 </div>
-                
-                <div class="loading-refinement" id="loadingRefinement">
-                    <div class="spinner"></div>
-                    <p>Updating your itinerary based on your feedback...</p>
-                </div>
+                <button class="btn btn-outline" onclick="closeDownloadModal()" style="margin-top: 20px;">Close</button>
             </div>
         </div>
     </div>
 
     <script>
+        let currentItinerary = null;
+        let currentUserData = null;
+        let itineraryId = null;
+        
         // Check if we have itinerary data
         window.addEventListener('DOMContentLoaded', function() {
             loadItinerary();
@@ -430,7 +433,17 @@
         
         function loadItinerary() {
             try {
-                // Get the generated itinerary from session storage
+                // Check URL parameters for shared itinerary
+                const urlParams = new URLSearchParams(window.location.search);
+                const sharedId = urlParams.get('id');
+                
+                if (sharedId) {
+                    // Load shared itinerary
+                    loadSharedItinerary(sharedId);
+                    return;
+                }
+                
+                // Check session storage for new itinerary
                 const itineraryData = sessionStorage.getItem('generatedItinerary');
                 const userData = sessionStorage.getItem('userData');
                 
@@ -440,22 +453,49 @@
                 }
                 
                 const itinerary = JSON.parse(itineraryData);
-                const userPrefs = JSON.parse(userData);
+                currentUserData = JSON.parse(userData);
+                currentItinerary = itinerary.itinerary;
+                itineraryId = itinerary.itineraryId;
                 
-                // Hide loading and show content
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                
-                // Populate summary
-                populateSummary(userPrefs);
-                
-                // Populate itinerary content
-                populateItinerary(itinerary);
+                displayItinerary();
                 
             } catch (error) {
                 console.error('Error loading itinerary:', error);
                 showError();
             }
+        }
+        
+        async function loadSharedItinerary(id) {
+            try {
+                const response = await fetch(`/.netlify/functions/get-itinerary/${id}`);
+                
+                if (!response.ok) {
+                    throw new Error('Itinerary not found');
+                }
+                
+                const data = await response.json();
+                currentItinerary = data.itinerary.itineraryText;
+                currentUserData = data.itinerary.userData;
+                itineraryId = data.itinerary.id;
+                
+                displayItinerary();
+                
+            } catch (error) {
+                console.error('Error loading shared itinerary:', error);
+                showError();
+            }
+        }
+        
+        function displayItinerary() {
+            // Hide loading and show content
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            // Populate summary
+            populateSummary(currentUserData);
+            
+            // Populate itinerary content
+            populateItinerary(currentItinerary);
         }
         
         function showError() {
@@ -477,7 +517,7 @@
             const contentElement = document.getElementById('itineraryContent');
             
             // Format the itinerary text with proper HTML
-            let formattedItinerary = itinerary.itinerary || itinerary.content || 'No itinerary content available';
+            let formattedItinerary = itinerary || 'No itinerary content available';
             
             // Convert line breaks to HTML
             formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
@@ -494,147 +534,128 @@
             contentElement.innerHTML = formattedItinerary;
         }
         
-        function showRefinementPanel() {
-            document.getElementById('refinementPanel').style.display = 'block';
-            document.getElementById('refinementPanel').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function hideRefinementPanel() {
-            document.getElementById('refinementPanel').style.display = 'none';
-        }
-        
-        function addSuggestion(text) {
-            const textarea = document.getElementById('feedbackText');
-            if (textarea.value) {
-                textarea.value += '\n\n' + text;
+        function showShareModal() {
+            const modal = document.getElementById('shareModal');
+            const shareUrl = document.getElementById('shareUrl');
+            
+            if (itineraryId) {
+                const url = `${window.location.origin}/planner/itinerary.html?id=${itineraryId}`;
+                shareUrl.textContent = url;
             } else {
-                textarea.value = text;
+                shareUrl.textContent = 'Shareable link not available';
             }
-            textarea.focus();
+            
+            modal.style.display = 'block';
         }
         
-        async function submitRefinement() {
-            const feedback = document.getElementById('feedbackText').value.trim();
-            if (!feedback) {
-                alert('Please provide some feedback about what you\'d like to change.');
-                return;
-            }
-            
-            // Show loading state
-            document.querySelector('.feedback-form').style.display = 'none';
-            document.getElementById('loadingRefinement').style.display = 'block';
-            
-            try {
-                // This would call your refinement API in a real implementation
-                const response = await fetch('/.netlify/functions/refine-itinerary', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        itineraryId: 'placeholder', // You'd get this from the original generation
-                        feedback: feedback,
-                        sessionId: localStorage.getItem('sessionId')
-                    })
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    
-                    // Update the displayed itinerary
-                    populateItinerary(result);
-                    
-                    // Update session storage
-                    sessionStorage.setItem('generatedItinerary', JSON.stringify(result));
-                    
-                    alert('Your itinerary has been updated based on your feedback!');
-                } else {
-                    throw new Error('Failed to refine itinerary');
-                }
-                
-            } catch (error) {
-                console.error('Error refining itinerary:', error);
-                alert('Sorry, there was an error updating your itinerary. Please try again.');
-            }
-            
-            // Reset form
-            document.getElementById('feedbackText').value = '';
-            document.querySelector('.feedback-form').style.display = 'grid';
-            document.getElementById('loadingRefinement').style.display = 'none';
-            hideRefinementPanel();
+        function closeShareModal() {
+            document.getElementById('shareModal').style.display = 'none';
         }
         
-        function downloadItinerary() {
-            const itineraryContent = document.getElementById('itineraryContent').innerHTML;
-            const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
-            
-            const htmlContent = `
+        function copyShareLink() {
+            const shareUrl = document.getElementById('shareUrl').textContent;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('Link copied to clipboard!');
+                closeShareModal();
+            }).catch(() => {
+                alert('Unable to copy link. Please copy manually.');
+            });
+        }
+        
+        function showDownloadOptions() {
+            document.getElementById('downloadModal').style.display = 'block';
+        }
+        
+        function closeDownloadModal() {
+            document.getElementById('downloadModal').style.display = 'none';
+        }
+        
+        function downloadAsPDF() {
+            // Create a clean PDF version
+            const printContent = createPrintableContent();
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(`
                 <!DOCTYPE html>
                 <html>
                 <head>
                     <title>Ring of Kerry Itinerary</title>
                     <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                        h1 { color: #2d5a3d; }
+                        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                        h1 { color: #2d5a3d; text-align: center; }
                         h2 { color: #4a7c59; border-bottom: 2px solid #4a7c59; padding-bottom: 5px; }
                         h3 { color: #2d5a3d; }
-                        strong { color: #2d5a3d; }
-                        @media print { .no-print { display: none; } }
+                        .summary { background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; }
+                        @media print { body { margin: 20px; } }
                     </style>
                 </head>
                 <body>
-                    <h1>🍀 Your Ring of Kerry Adventure</h1>
-                    <p><strong>${userData.duration}-Day Itinerary</strong> • ${userData.travelMonth} 2025 • ${userData.groupSize} people • €${userData.budget}/day budget</p>
-                    <hr>
-                    ${itineraryContent}
-                    <hr>
-                    <p><em>Generated by Ring of Kerry Tours - ringofkerrytours.com</em></p>
+                    ${printContent}
+                    <script>window.print(); window.close();</script>
                 </body>
                 </html>
-            `;
-            
-            const blob = new Blob([htmlContent], { type: 'text/html' });
+            `);
+            closeDownloadModal();
+        }
+        
+        function downloadAsText() {
+            const textContent = createTextContent();
+            const blob = new Blob([textContent], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'ring-of-kerry-itinerary.html';
+            a.download = 'ring-of-kerry-itinerary.txt';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            closeDownloadModal();
         }
         
-        function shareItinerary() {
-            if (navigator.share) {
-                navigator.share({
-                    title: 'My Ring of Kerry Adventure',
-                    text: 'Check out my personalized Ring of Kerry itinerary!',
-                    url: window.location.href
-                });
-            } else {
-                // Fallback - copy link to clipboard
-                navigator.clipboard.writeText(window.location.href).then(() => {
-                    alert('Link copied to clipboard!');
-                }).catch(() => {
-                    alert('Unable to copy link. Please copy the URL manually.');
-                });
-            }
+        function emailItinerary() {
+            const textContent = createTextContent();
+            const subject = encodeURIComponent('My Ring of Kerry Itinerary');
+            const body = encodeURIComponent(textContent);
+            const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+            window.location.href = mailtoLink;
+            closeDownloadModal();
+        }
+        
+        function createPrintableContent() {
+            const userData = currentUserData;
+            const interests = userData.interests?.join(', ') || 'general sightseeing';
+            
+            return `
+                <h1>🍀 Your Ring of Kerry Adventure</h1>
+                <div class="summary">
+                    <strong>${userData.duration}-Day Itinerary</strong> • ${userData.travelMonth} 2025 • ${userData.groupSize} people • €${userData.budget}/day budget<br>
+                    Interests: ${interests}
+                </div>
+                ${document.getElementById('itineraryContent').innerHTML}
+                <hr style="margin: 30px 0;">
+                <p><em>Generated by Ring of Kerry Tours - ringofkerrytours.com</em></p>
+            `;
+        }
+        
+        function createTextContent() {
+            const userData = currentUserData;
+            const interests = userData.interests?.join(', ') || 'general sightseeing';
+            
+            // Convert HTML to plain text
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = currentItinerary;
+            const plainText = tempDiv.textContent || tempDiv.innerText || '';
+            
+            return `RING OF KERRY ADVENTURE
+${userData.duration}-Day Itinerary • ${userData.travelMonth} 2025 • ${userData.groupSize} people • €${userData.budget}/day budget
+Interests: ${interests}
+
+${plainText}
+
+Generated by Ring of Kerry Tours - ringofkerrytours.com`;
         }
         
         function printItinerary() {
-            // Hide controls before printing
-            const controls = document.querySelector('.controls');
-            const refinementPanel = document.getElementById('refinementPanel');
-            
-            controls.style.display = 'none';
-            refinementPanel.style.display = 'none';
-            
             window.print();
-            
-            // Restore controls after printing
-            setTimeout(() => {
-                controls.style.display = 'flex';
-            }, 1000);
         }
     </script>
 </body>
