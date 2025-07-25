@@ -1,21 +1,4 @@
-function populateItinerary(itinerary) {
-            console.log("populateItinerary called");
-            
-            var contentElement = document.getElementById('itineraryContent');
-            
-            if (!itinerary) {
-                contentElement.innerHTML = '<p>No itinerary content available.</p>';
-                return;
-            }
-            
-            var formattedItinerary = itinerary;
-            
-            // First, convert **bold** to styled strong tags (before adding <br> tags)
-            formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            
-            // Convert "DAY X:" patterns to h2 headers (before <br> conversion)
-            formattedItinerary = formattedItinerary.replace(/^(DAY \d+[^\n]*)/gm, '<h2>$1</h2>');
-            <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -582,6 +565,9 @@ function populateItinerary(itinerary) {
             
             // Convert "DAY X:" patterns to h2 headers (before <br> conversion)
             formattedItinerary = formattedItinerary.replace(/^(DAY \d+[^\n]*)/gm, '<h2>$1</h2>');
+            
+            // Remove the dashed lines that follow day headers (they're just visual clutter now)
+            formattedItinerary = formattedItinerary.replace(/^-{20,}$/gm, '<div class="day-separator"></div>');
             
             // Convert "MORNING:", "AFTERNOON:", "EVENING:" to h3 headers (before <br> conversion)
             formattedItinerary = formattedItinerary.replace(/^(MORNING|AFTERNOON|EVENING):$/gm, '<h3>$1</h3>');
