@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan Your Ring of Kerry Trip - AI Trip Planner</title>
+    <meta name="description" content="Create your personalized Ring of Kerry itinerary in 3 minutes. Tell us your preferences and get a custom travel plan.">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2d5a3d 0%, #4a7c59 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .back-link {
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            display: inline-block;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+        
+        .back-link:hover {
+            opacity: 1;
+        }
+        
+        .questionnaire {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .question-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .question-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .question-title {
+            font-size: 1.8em;
+            color: #2d5a3d;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .question-subtitle {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 1.1em;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4a7c59;
+            box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.1);
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox-item:hover {
+            background-color: #f8f9fa;
+            border-color: #4a7c59;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .checkbox-item.checked {
+            background-color: #e8f5e8;
+            border-color: #4a7c59;
+        }
+        
+        .slider-container {
+            margin: 20px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4a7c59;
+            cursor: pointer;
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #4a7c59;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3d6449;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 124, 89, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a7c59, #2d5a3d);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid #e0e0e0;
+            border-top: 4px solid #4a7c59;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .questionnaire {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Back to Home</a>
+        
+        <div class="header">
+            <h1>🍀 Plan Your Ring of Kerry Trip</h1>
+            <p>Let's create your perfect Irish adventure in just a few minutes</p>
+        </div>
+        
+        <div class="questionnaire">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div class="error-message" id="errorMessage"></div>
+            
+            <!-- Question 1: Group Details -->
+            <div class="question-section active" id="section1">
+                <h2 class="question-title">Tell us about your group</h2>
+                <p class="question-subtitle">This helps us tailor activities and recommendations</p>
+                
+                <div class="form-group">
+                    <label for="groupSize">How many people in your group?</label>
+                    <select id="groupSize" required>
+                        <option value="">Select group size</option>
+                        <option value="2">2 people (couple)</option>
+                        <option value="3-4">3-4 people (small family/friends)</option>
+                        <option value="5-8">5-8 people (large family/group)</option>
+                        <option value="9+">9+ people (tour group)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ageRange">What's the age range of your group?</label>
+                    <select id="ageRange" required>
+                        <option value="">Select age range</option>
+                        <option value="20s-30s">Mostly 20s-30s</option>
+                        <option value="30s-40s">Mostly 30s-40s</option>
+                        <option value="40s-50s">Mostly 40s-50s</option>
+                        <option value="50s-60s">Mostly 50s-60s</option>
+                        <option value="60s+">Mostly 60s+</option>
+                        <option value="mixed">Mixed ages</option>
+                        <option value="family-kids">Family with children</option>
+                        <option value="family-teens">Family with teenagers</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Question 2: Trip Details -->
+            <div class="question-section" id="section2">
+                <h2 class="question-title">Your trip basics</h2>
+                <p class="question-subtitle">When and how long will you be exploring?</p>
+                
+                <div class="form-group">
+                    <label for="duration">How many days will you spend in the Ring of Kerry area?</label>
+                    <select id="duration" required>
+                        <option value="">Select duration</option>
+                        <option value="1">1 day (day trip)</option>
+                        <option value="2">2 days</option>
+                        <option value="3">3 days</option>
+                        <option value="4">4 days</option>
+                        <option value="5">5 days</option>
+                        <option value="6">6 days</option>
+                        <option value="7">7 days</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="travelMonth">What month will you be visiting?</label>
+                    <select id="travelMonth" required>
+                        <option value="">Select month</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="accommodation">Where would you prefer to stay?</label>
+                    <select id="accommodation">
+                        <option value="">Select accommodation preference</option>
+                        <option value="killarney-town">Killarney town center</option>
+                        <option value="killarney-outskirts">Killarney area (outside town)</option>
+                        <option value="kenmare">Kenmare</option>
+                        <option value="sneem">Sneem</option>
+                        <option value="waterville">Waterville</option>
+                        <option value="cahersiveen">Cahersiveen</option>
+                        <option value="multiple">Different places each night</option>
+                        <option value="unsure">Not sure - recommend best option</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Question 3: Transportation & Budget -->
+            <div class="question-section" id="section3">
+                <h2 class="question-title">Transportation & Budget</h2>
+                <p class="question-subtitle">How will you get around and what's your spending comfort level?</p>
+                
+                <div class="form-group">
+                    <label for="transport">How will you be getting around?</label>
+                    <select id="transport" required>
+                        <option value="">Select transportation</option>
+                        <option value="rental-car">Rental car (self-drive)</option>
+                        <option value="private-driver">Private driver/guide</option>
+                        <option value="bus-tours">Organized bus tours</option>
+                        <option value="mix">Mix of options</option>
+                        <option value="unsure">Not sure - recommend best option</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>If driving, which of these are you comfortable with? (Check all that apply)</label>
+                    <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">Only check the boxes for things you feel confident doing. We'll plan your route accordingly.</p>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="leftSide" value="left-side">
+                            <label for="leftSide">✓ I'm comfortable driving on the left side of the road</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="narrowRoads" value="narrow-roads">
+                            <label for="narrowRoads">✓ I'm comfortable with narrow country roads</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hillsWinds" value="hills-winds">
+                            <label for="hillsWinds">✓ I'm comfortable with steep hills and winding roads</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="budget">Daily budget per person (excluding accommodation):</label>
+                    <div class="slider-container">
+                        <input type="range" min="50" max="500" value="200" class="slider" id="budget">
+                        <div class="slider-labels">
+                            <span>€50 (Budget)</span>
+                            <span id="budgetValue">€200</span>
+                            <span>€500+ (Luxury)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Question 4: Interests -->
+            <div class="question-section" id="section4">
+                <h2 class="question-title">What interests you most?</h2>
+                <p class="question-subtitle">Select all that appeal to your group</p>
+                
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="scenery" value="scenery">
+                        <label for="scenery">🏔️ Scenic drives & views</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="history" value="history">
+                        <label for="history">🏰 Irish history & heritage</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="culture" value="culture">
+                        <label for="culture">🎵 Traditional music & culture</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="food" value="food">
+                        <label for="food">🍺 Local food & drink</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="adventure" value="adventure">
+                        <label for="adventure">🥾 Outdoor activities</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="photography" value="photography">
+                        <label for="photography">📸 Photography opportunities</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="shopping" value="shopping">
+                        <label for="shopping">🛍️ Local crafts & shopping</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="relaxation" value="relaxation">
+                        <label for="relaxation">☕ Relaxation & leisure</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Question 5: Activity Level & Preferences -->
+            <div class="question-section" id="section5">
+                <h2 class="question-title">Activity level & preferences</h2>
+                <p class="question-subtitle">Help us match the pace to your group</p>
+                
+                <div class="form-group">
+                    <label>How active is your group?</label>
+                    <div class="slider-container">
+                        <input type="range" min="1" max="5" value="3" class="slider" id="activityLevel">
+                        <div class="slider-labels">
+                            <span>Prefer easy walking</span>
+                            <span id="activityValue">Moderate activity</span>
+                            <span>Love hiking & adventure</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="pace">What's your preferred travel pace?</label>
+                    <select id="pace">
+                        <option value="">Select pace</option>
+                        <option value="relaxed">Relaxed - few stops, more time at each</option>
+                        <option value="moderate">Moderate - balanced itinerary</option>
+                        <option value="packed">Packed - see as much as possible</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="specialNeeds">Any accessibility needs or special considerations?</label>
+                    <textarea id="specialNeeds" rows="3" placeholder="e.g., mobility issues, dietary restrictions, child-friendly needs..."></textarea>
+                </div>
+            </div>
+            
+            <!-- Question 6: Final Details -->
+            <div class="question-section" id="section6">
+                <h2 class="question-title">Final touches</h2>
+                <p class="question-subtitle">Any specific requests or concerns?</p>
+                
+                <div class="form-group">
+                    <label for="mustSee">Any specific places you absolutely want to see?</label>
+                    <textarea id="mustSee" rows="3" placeholder="e.g., Skellig Michael, Gap of Dunloe, specific castles..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="concerns">Any concerns or things you want to avoid?</label>
+                    <textarea id="concerns" rows="3" placeholder="e.g., afraid of heights, get car sick, don't like crowded places..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="previousVisits">Have you visited Ireland before?</label>
+                    <select id="previousVisits">
+                        <option value="">Select experience level</option>
+                        <option value="first-time">First time in Ireland</option>
+                        <option value="been-elsewhere">Been to other parts of Ireland</option>
+                        <option value="kerry-before">Been to Kerry before</option>
+                        <option value="frequent">Frequent Ireland visitor</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Loading Screen -->
+            <div class="question-section" id="loading">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <h2 class="question-title">Creating your perfect Ring of Kerry itinerary...</h2>
+                    <p class="question-subtitle">This will take just a moment while we craft your personalized adventure</p>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button class="btn btn-secondary" id="prevBtn" onclick="previousSection()" style="display: none;">Previous</button>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextSection()">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 1;
+        const totalSections = 6;
+        
+        // Generate session ID for tracking
+        let sessionId = localStorage.getItem('sessionId');
+        if (!sessionId) {
+            sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('sessionId', sessionId);
+        }
+        
+        // Update budget display
+        document.getElementById('budget').addEventListener('input', function() {
+            document.getElementById('budgetValue').textContent = '€' + this.value;
+        });
+        
+        // Update activity level display
+        document.getElementById('activityLevel').addEventListener('input', function() {
+            const levels = ['Prefer easy walking', 'Light activity', 'Moderate activity', 'Active adventures', 'Love hiking & adventure'];
+            document.getElementById('activityValue').textContent = levels[this.value - 1];
+        });
+        
+        // Handle checkbox styling
+        document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                this.closest('.checkbox-item').classList.toggle('checked', this.checked);
+            });
+        });
+        
+        function updateProgress() {
+            const progress = (currentSection / totalSections) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            errorDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        function validateCurrentSection() {
+            hideError();
+            
+            switch(currentSection) {
+                case 1:
+                    if (!document.getElementById('groupSize').value || !document.getElementById('ageRange').value) {
+                        showError('Please fill in all required fields before continuing.');
+                        return false;
+                    }
+                    break;
+                case 2:
+                    if (!document.getElementById('duration').value || !document.getElementById('travelMonth').value) {
+                        showError('Please select your trip duration and travel month.');
+                        return false;
+                    }
+                    break;
+                case 3:
+                    if (!document.getElementById('transport').value) {
+                        showError('Please select your transportation preference.');
+                        return false;
+                    }
+                    break;
+                case 4:
+                    const interests = document.querySelectorAll('#section4 input[type="checkbox"]:checked');
+                    if (interests.length === 0) {
+                        showError('Please select at least one interest to help us personalize your trip.');
+                        return false;
+                    }
+                    break;
+            }
+            return true;
+        }
+        
+        function nextSection() {
+            if (!validateCurrentSection()) {
+                return;
+            }
+            
+            if (currentSection < totalSections) {
+                // Hide current section
+                document.getElementById('section' + currentSection).classList.remove('active');
+                
+                // Show next section
+                currentSection++;
+                document.getElementById('section' + currentSection).classList.add('active');
+                
+                updateProgress();
+                updateButtons();
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+            } else {
+                // Final submission
+                generateItinerary();
+            }
+        }
+        
+        function previousSection() {
+            if (currentSection > 1) {
+                // Hide current section
+                document.getElementById('section' + currentSection).classList.remove('active');
+                
+                // Show previous section
+                currentSection--;
+                document.getElementById('section' + currentSection).classList.add('active');
+                
+                updateProgress();
+                updateButtons();
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+            }
+        }
+        
+        function updateButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (currentSection === 1) {
+                prevBtn.style.display = 'none';
+            } else {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            if (currentSection === totalSections) {
+                nextBtn.textContent = 'Create My Itinerary';
+            } else {
+                nextBtn.textContent = 'Next';
+            }
+        }
+        
+        function collectFormData() {
+            const data = {
+                groupSize: document.getElementById('groupSize').value,
+                ageRange: document.getElementById('ageRange').value,
+                duration: document.getElementById('duration').value,
+                travelMonth: document.getElementById('travelMonth').value,
+                accommodation: document.getElementById('accommodation').value,
+                transport: document.getElementById('transport').value,
+                budget: document.getElementById('budget').value,
+                activityLevel: document.getElementById('activityLevel').value,
+                pace: document.getElementById('pace').value,
+                specialNeeds: document.getElementById('specialNeeds').value,
+                mustSee: document.getElementById('mustSee').value,
+                concerns: document.getElementById('concerns').value,
+                previousVisits: document.getElementById('previousVisits').value,
+                interests: [],
+                drivingComfort: []
+            };
+            
+            // Collect interests
+            document.querySelectorAll('#section4 input[type="checkbox"]:checked').forEach(cb => {
+                data.interests.push(cb.value);
+            });
+            
+            // Collect driving comfort
+            document.querySelectorAll('#section3 input[type="checkbox"]:checked').forEach(cb => {
+                data.drivingComfort.push(cb.value);
+            });
+            
+            return data;
+        }
+        
+        async function generateItinerary() {
+            // Hide current section
+            document.getElementById('section' + currentSection).classList.remove('active');
+            
+            // Show loading
+            document.getElementById('loading').classList.add('active');
+            
+            // Hide navigation
+            document.querySelector('.navigation').style.display = 'none';
+            
+            try {
+                // Collect all form data
+                const userData = collectFormData();
+                
+                // Call your API
+                const response = await fetch('/.netlify/functions/generate-itinerary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userData,
+                        sessionId
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to generate itinerary');
+                }
+                
+                const result = await response.json();
+                
+                // Store the result for the itinerary page
+                sessionStorage.setItem('generatedItinerary', JSON.stringify(result));
+                sessionStorage.setItem('userData', JSON.stringify(userData));
+                
+                // Redirect to itinerary display page
+                window.location.href = '/planner/itinerary.html';
+                
+            } catch (error) {
+                console.error('Error generating itinerary:', error);
+                
+                // Hide loading
+                document.getElementById('loading').classList.remove('active');
+                
+                // Show error and return to last section
+                document.getElementById('section' + totalSections).classList.add('active');
+                document.querySelector('.navigation').style.display = 'flex';
+                currentSection = totalSections;
+                
+                showError('Sorry, there was an error generating your itinerary. Please try again. If the problem persists, please contact us.');
+            }
+        }
+        
+        // Initialize
+        updateProgress();
+        updateButtons();
+        
+        // Allow Enter key to advance to next section
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && currentSection < totalSections) {
+                nextSection();
+            }
+        });
+    </script>
+</body>
+</html>
