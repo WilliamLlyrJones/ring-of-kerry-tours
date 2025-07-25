@@ -557,6 +557,9 @@
                 return;
             }
             
+            // Log the raw itinerary to see what we're working with
+            console.log("Raw itinerary:", itinerary.substring(0, 200));
+            
             var formattedItinerary = itinerary;
             
             // Convert line breaks to HTML
@@ -571,7 +574,13 @@
             // Convert time stamps to subheadings with clock emoji
             formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '<h3>$1</h3>');
             
+            // Log the formatted result
+            console.log("Formatted itinerary:", formattedItinerary.substring(0, 300));
+            
             contentElement.innerHTML = formattedItinerary;
+            
+            // Log what's actually in the DOM
+            console.log("DOM content:", contentElement.innerHTML.substring(0, 300));
         }
         
         function showShareModal() {
