@@ -1,4 +1,6 @@
 exports.handler = async (event, context) => {
+  console.log('Function starting...');
+  
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -19,14 +21,29 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    console.log('Parsing request body...');
     const body = JSON.parse(event.body);
     const userData = body.userData;
+
+    // Check if we have the API key
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('Missing ANTHROPIC_API_KEY');
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server configuration error',
+          message: 'API key not configured'
+        })
+      };
+    }
 
     // Validate required fields
     const required = ['groupSize', 'duration', 'travelMonth', 'budget'];
     const missing = required.filter(field => !userData[field]);
     
     if (missing.length > 0) {
+      console.log('Missing required fields:', missing);
       return {
         statusCode: 400,
         headers,
@@ -37,60 +54,27 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Build simple prompt
-    const prompt = `Create a ${userData.duration}-day Ring of Kerry itinerary for ${userData.groupSize} people visiting in ${userData.travelMonth}. Budget: €${userData.budget} per person per day. Interests: ${userData.interests?.join(', ') || 'general sightseeing'}. Include specific locations, times, restaurant recommendations, and driving directions. Make it detailed and practical.`;
+    // Build prompt
+    const prompt = `Create a detailed ${userData.duration}-day Ring of Kerry itinerary for ${userData.groupSize} people visiting in ${userData.travelMonth}. Budget: €${userData.budget} per person per day. Interests: ${userData.interests?.join(', ') || 'general sightseeing'}. 
+
+Please include:
+- Day-by-day schedule with specific times
+- Exact locations and attractions
+- Restaurant recommendations with price ranges
+- Driving directions and distances
+- Weather backup plans
+- Photography tips
+- Local insider knowledge
+
+Make it detailed, practical, and personalized to their preferences.`;
 
     console.log('Calling Claude API...');
 
-    // Call Claude API
+    // Call Claude API with correct model name
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: 4000,
-        messages: [{
-          role: 'user',
-          content: prompt
-        }]
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Claude API error:', errorData);
-      throw new Error(`Claude API error: ${errorData.error?.message || 'Unknown error'}`);
-    }
-
-    const result = await response.json();
-    const itinerary = result.content[0].text;
-
-    console.log('Claude API successful');
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        itinerary,
-        userData
-      })
-    };
-
-  } catch (error) {
-    console.error('Error generating itinerary:', error);
-
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: 'Failed to generate itinerary',
-        message: error.message
-      })
-    };
-  }
-};
+      }
