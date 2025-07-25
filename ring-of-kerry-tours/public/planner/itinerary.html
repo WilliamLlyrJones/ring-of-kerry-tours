@@ -1,4 +1,21 @@
-<!DOCTYPE html>
+function populateItinerary(itinerary) {
+            console.log("populateItinerary called");
+            
+            var contentElement = document.getElementById('itineraryContent');
+            
+            if (!itinerary) {
+                contentElement.innerHTML = '<p>No itinerary content available.</p>';
+                return;
+            }
+            
+            var formattedItinerary = itinerary;
+            
+            // First, convert **bold** to styled strong tags (before adding <br> tags)
+            formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Convert "DAY X:" patterns to h2 headers (before <br> conversion)
+            formattedItinerary = formattedItinerary.replace(/^(DAY \d+[^\n]*)/gm, '<h2>$1</h2>');
+            <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
