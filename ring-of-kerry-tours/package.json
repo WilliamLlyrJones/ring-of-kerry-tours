@@ -6,31 +6,12 @@
   "scripts": {
     "build": "echo 'Build complete'",
     "dev": "netlify dev",
-    "start": "netlify dev",
-    "deploy": "netlify deploy --prod",
-    "test": "echo 'No tests specified'"
+    "start": "netlify dev"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0"
   },
   "devDependencies": {
     "netlify-cli": "^17.0.0"
-  },
-  "keywords": [
-    "travel",
-    "ireland",
-    "ring-of-kerry",
-    "ai",
-    "trip-planner",
-    "tourism"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/ring-of-kerry-tours.git"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }
