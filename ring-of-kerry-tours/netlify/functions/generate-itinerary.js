@@ -1,5 +1,3 @@
-// Replace your current netlify/functions/generate-itinerary.js with this enhanced version:
-
 exports.handler = async (event, context) => {
   console.log('Function starting...');
   
@@ -449,4 +447,11 @@ function getBudgetStrategy(budget, interests) {
     strategies.push("🎯 **Value Focus:** Lunch specials over dinner prices, B&B breakfasts to save on one meal, free parking locations, and activities with the highest impact-to-cost ratio.");
   } else if (budgetNum <= 150) {
     strategies.push("⚖️ **Balanced Investment:** Strategic splurges on experiences that align with your interests, balanced with budget-conscious choices for routine meals and activities.");
-    strategies.push("🎨
+    strategies.push("🎨 **Interest Prioritization:** Higher spending on " + (interests?.[0] || 'key') + " activities, economical choices for secondary experiences.");
+  } else {
+    strategies.push("✨ **Premium Curation:** Exclusive experiences, private guides for specialized interests, fine dining showcasing local ingredients, and unique accommodations.");
+    strategies.push("🏆 **Memorable Moments:** Investment in once-in-a-lifetime Kerry experiences that most travelers never access due to cost constraints.");
+  }
+  
+  return strategies.join('\n');
+}
