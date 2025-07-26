@@ -64,6 +64,74 @@
             margin-top: 20px;
         }
         
+        .special-requirements-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            border-radius: 12px;
+            border-left: 4px solid #4a7c59;
+        }
+        
+        .requirements-title {
+            font-weight: 600;
+            color: #2d5a3d;
+            font-size: 1.1em;
+            margin-bottom: 12px;
+        }
+        
+        .requirements-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .requirement-highlight {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            border: 1px solid;
+        }
+        
+        .requirement-highlight.dietary {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffeaa7;
+        }
+        
+        .requirement-highlight.accessibility {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-color: #bee5eb;
+        }
+        
+        .requirement-highlight.special {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+        
+        .requirement-highlight.style {
+            background: #e2e3e5;
+            color: #383d41;
+            border-color: #d6d8db;
+        }
+        
+        .requirement-highlight.accommodation {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        
+        .requirements-note {
+            font-size: 0.9em;
+            color: #2d5a3d;
+            font-style: italic;
+            margin-top: 8px;
+        }
+        
         .controls {
             display: flex;
             justify-content: center;
@@ -379,7 +447,6 @@
                 <button class="btn btn-primary" onclick="showDownloadOptions()">📱 Download Itinerary</button>
                 <button class="btn btn-secondary" onclick="showShareModal()">📤 Share</button>
                 <button class="btn btn-outline" onclick="printItinerary()">🖨️ Print</button>
-                <button class="btn btn-outline" onclick="debugContent()" style="background: orange; color: white;">🐛 Debug Content</button>
             </div>
             
             <div class="itinerary-content" id="itineraryContent">
@@ -545,7 +612,42 @@
             var summaryElement = document.getElementById('tripSummary');
             var interests = userData && userData.interests ? userData.interests.join(', ') : 'general sightseeing';
             
-            summaryElement.innerHTML = '<strong>' + userData.duration + '-Day Itinerary</strong> • ' + userData.travelMonth + ' 2025 • ' + userData.groupSize + ' people • €' + userData.budget + '/day budget<br>Interests: ' + interests;
+            // Build the basic summary
+            var summaryHTML = '<strong>' + userData.duration + '-Day Itinerary</strong> • ' + userData.travelMonth + ' 2025 • ' + userData.groupSize + ' people • €' + userData.budget + '/day budget<br>Interests: ' + interests;
+            
+            // Add special requirements section if any exist
+            var specialRequirements = [];
+            
+            if (userData.dietaryRequirements) {
+                specialRequirements.push('<span class="requirement-highlight dietary">🍽️ Dietary: ' + userData.dietaryRequirements + '</span>');
+            }
+            
+            if (userData.accessibilityNeeds) {
+                specialRequirements.push('<span class="requirement-highlight accessibility">♿ Accessibility: ' + userData.accessibilityNeeds + '</span>');
+            }
+            
+            if (userData.specialRequests) {
+                specialRequirements.push('<span class="requirement-highlight special">✨ Special Requests: ' + userData.specialRequests + '</span>');
+            }
+            
+            if (userData.travelStyle && userData.travelStyle !== 'balanced pace') {
+                specialRequirements.push('<span class="requirement-highlight style">🎯 Travel Style: ' + userData.travelStyle + '</span>');
+            }
+            
+            if (userData.accommodation && userData.accommodation !== 'mid-range hotels/B&Bs') {
+                specialRequirements.push('<span class="requirement-highlight accommodation">🏨 Accommodation: ' + userData.accommodation + '</span>');
+            }
+            
+            // Add special requirements to summary if any exist
+            if (specialRequirements.length > 0) {
+                summaryHTML += '<div class="special-requirements-section">';
+                summaryHTML += '<div class="requirements-title">✅ Your specific requirements have been incorporated:</div>';
+                summaryHTML += '<div class="requirements-list">' + specialRequirements.join('') + '</div>';
+                summaryHTML += '<div class="requirements-note">Every recommendation below has been carefully selected to accommodate these needs.</div>';
+                summaryHTML += '</div>';
+            }
+            
+            summaryElement.innerHTML = summaryHTML;
         }
         
         function populateItinerary(itinerary) {
@@ -694,29 +796,6 @@
             content += 'Generated by Ring of Kerry Tours - ringofkerrytours.com';
             
             return content;
-        }
-        
-        function debugContent() {
-            console.log("=== DEBUG CONTENT ===");
-            console.log("currentItinerary type:", typeof currentItinerary);
-            console.log("currentItinerary length:", currentItinerary ? currentItinerary.length : 'null');
-            console.log("First 500 chars of currentItinerary:");
-            console.log(JSON.stringify(currentItinerary ? currentItinerary.substring(0, 500) : 'null'));
-            
-            var contentElement = document.getElementById('itineraryContent');
-            console.log("Current DOM innerHTML:");
-            console.log(contentElement.innerHTML.substring(0, 500));
-            
-            // Show first few lines split by newlines
-            if (currentItinerary) {
-                var lines = currentItinerary.split('\n');
-                console.log("First 10 lines:");
-                for (var i = 0; i < Math.min(10, lines.length); i++) {
-                    console.log(i + ": '" + lines[i] + "'");
-                }
-            }
-            
-            alert("Check the browser console for debug information");
         }
         
         function printItinerary() {
