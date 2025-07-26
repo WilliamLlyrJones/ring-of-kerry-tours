@@ -102,6 +102,13 @@
             color: #333;
         }
         
+        .field-description {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
         input, select, textarea {
             width: 100%;
             padding: 12px 15px;
@@ -475,10 +482,10 @@
                 </div>
             </div>
             
-            <!-- Question 5: Activity Level & Preferences -->
+            <!-- Question 5: Activity Level & Special Requirements -->
             <div class="question-section" id="section5">
-                <h2 class="question-title">Activity level & preferences</h2>
-                <p class="question-subtitle">Help us match the pace to your group</p>
+                <h2 class="question-title">Activity level & special requirements</h2>
+                <p class="question-subtitle">Help us match the pace to your group and accommodate any special needs</p>
                 
                 <div class="form-group">
                     <label>How active is your group?</label>
@@ -502,9 +509,25 @@
                     </select>
                 </div>
                 
+                <!-- NEW: Separate dietary requirements field -->
                 <div class="form-group">
-                    <label for="specialNeeds">Any accessibility needs or special considerations?</label>
-                    <textarea id="specialNeeds" rows="3" placeholder="e.g., mobility issues, dietary restrictions, child-friendly needs..."></textarea>
+                    <label for="dietaryRequirements">Dietary requirements or food allergies</label>
+                    <textarea id="dietaryRequirements" rows="2" placeholder="e.g., One person is celiac, vegetarian options needed, no shellfish allergies, halal requirements..."></textarea>
+                    <p class="field-description">Please be specific - we'll mention these exact requirements in your itinerary recommendations.</p>
+                </div>
+                
+                <!-- NEW: Separate accessibility needs field -->
+                <div class="form-group">
+                    <label for="accessibilityNeeds">Accessibility requirements or mobility needs</label>
+                    <textarea id="accessibilityNeeds" rows="2" placeholder="e.g., One person is in a wheelchair, limited walking ability, hearing assistance needed, vision impairment..."></textarea>
+                    <p class="field-description">Please describe any accessibility needs so we can ensure all recommendations are suitable.</p>
+                </div>
+                
+                <!-- UPDATED: General special requests (renamed from specialNeeds) -->
+                <div class="form-group">
+                    <label for="specialRequests">Other special requests or celebrations</label>
+                    <textarea id="specialRequests" rows="2" placeholder="e.g., Anniversary celebration, first time in Ireland, photography workshops, family reunion..."></textarea>
+                    <p class="field-description">Any other special occasions or preferences you'd like us to incorporate.</p>
                 </div>
             </div>
             
@@ -689,6 +712,7 @@
         
         function collectFormData() {
             const data = {
+                // Existing required fields
                 groupSize: document.getElementById('groupSize').value,
                 ageRange: document.getElementById('ageRange').value,
                 duration: document.getElementById('duration').value,
@@ -698,13 +722,34 @@
                 budget: document.getElementById('budget').value,
                 activityLevel: document.getElementById('activityLevel').value,
                 pace: document.getElementById('pace').value,
-                specialNeeds: document.getElementById('specialNeeds').value,
+                
+                // ENHANCED: Separate specific requirement fields
+                dietaryRequirements: document.getElementById('dietaryRequirements').value.trim(),
+                accessibilityNeeds: document.getElementById('accessibilityNeeds').value.trim(),
+                specialRequests: document.getElementById('specialRequests').value.trim(),
+                
+                // Existing fields
                 mustSee: document.getElementById('mustSee').value,
                 concerns: document.getElementById('concerns').value,
                 previousVisits: document.getElementById('previousVisits').value,
                 interests: [],
                 drivingComfort: []
             };
+            
+            // Add travel style based on pace for backend compatibility
+            if (data.pace) {
+                data.travelStyle = data.pace + ' pace';
+            }
+            
+            // Add accommodation type for backend compatibility
+            if (data.accommodation) {
+                data.accommodationType = data.accommodation;
+            }
+            
+            // Add transportation for backend compatibility
+            if (data.transport) {
+                data.transportation = data.transport;
+            }
             
             // Collect interests
             document.querySelectorAll('#section4 input[type="checkbox"]:checked').forEach(cb => {
@@ -714,6 +759,13 @@
             // Collect driving comfort
             document.querySelectorAll('#section3 input[type="checkbox"]:checked').forEach(cb => {
                 data.drivingComfort.push(cb.value);
+            });
+            
+            // Clean up empty fields to avoid sending empty strings
+            Object.keys(data).forEach(key => {
+                if (typeof data[key] === 'string' && data[key].trim() === '') {
+                    delete data[key];
+                }
             });
             
             return data;
