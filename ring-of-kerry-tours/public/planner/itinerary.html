@@ -519,7 +519,7 @@
         }
     </style>
     <!-- Google Maps API -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAxna1lvu0xrFFHw2t0uTNHqZMDYFAONJs&callback=initGoogleMaps&libraries=geometry"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initGoogleMaps&libraries=geometry"></script>
 </head>
 <body>
     <div class="container">
@@ -879,41 +879,179 @@
             console.log("Extracting locations from itinerary");
             extractedLocations = [];
             
-            if (!currentItinerary) return;
+            if (!currentItinerary) {
+                // Fallback to basic Ring of Kerry route if no itinerary
+                createBasicRingOfKerryRoute();
+                return;
+            }
             
-            var itineraryText = currentItinerary.toLowerCase();
             var dayLocations = {};
+            var duration = parseInt(currentUserData.duration) || 3;
             
             // Parse itinerary by days
             var dayPattern = /day (\d+)[^]*?(?=day \d+|$)/gi;
             var dayMatches = currentItinerary.match(dayPattern);
             
-            if (dayMatches) {
+            if (dayMatches && dayMatches.length > 0) {
                 dayMatches.forEach(function(dayText, index) {
                     var dayNumber = index + 1;
                     dayLocations[dayNumber] = [];
                     
-                    // Find locations mentioned in this day
+                    // Find locations mentioned in this day in order of appearance
+                    var foundLocations = [];
                     for (var locationKey in ringOfKerryLocations) {
-                        if (dayText.toLowerCase().includes(locationKey)) {
+                        var position = dayText.toLowerCase().indexOf(locationKey);
+                        if (position !== -1) {
                             var location = ringOfKerryLocations[locationKey];
-                            dayLocations[dayNumber].push({
+                            foundLocations.push({
                                 name: location.name,
                                 lat: location.lat,
                                 lng: location.lng,
-                                day: dayNumber
+                                day: dayNumber,
+                                position: position
                             });
                         }
                     }
+                    
+                    // Sort by order of appearance in text
+                    foundLocations.sort(function(a, b) {
+                        return a.position - b.position;
+                    });
+                    
+                    dayLocations[dayNumber] = foundLocations;
                 });
+            } else {
+                // If no day pattern found, create logical Ring of Kerry route
+                createBasicRingOfKerryRoute();
+                return;
             }
             
-            // Flatten to extractedLocations array
-            for (var day in dayLocations) {
-                extractedLocations = extractedLocations.concat(dayLocations[day]);
+            // Create logical routes for each day
+            for (var day = 1; day <= duration; day++) {
+                if (dayLocations[day] && dayLocations[day].length > 0) {
+                    // Ensure logical flow - start with previous day's end if available
+                    if (day > 1 && dayLocations[day-1] && dayLocations[day-1].length > 0) {
+                        var previousEnd = dayLocations[day-1][dayLocations[day-1].length - 1];
+                        // Check if current day starts near where previous day ended
+                        var currentStart = dayLocations[day][0];
+                        var distance = calculateDistance(previousEnd.lat, previousEnd.lng, currentStart.lat, currentStart.lng);
+                        
+                        // If too far apart, add connecting location
+                        if (distance > 50) { // 50km threshold
+                            var connectingLocation = findConnectingLocation(previousEnd, currentStart);
+                            if (connectingLocation) {
+                                dayLocations[day].unshift(connectingLocation);
+                            }
+                        }
+                    }
+                    
+                    extractedLocations = extractedLocations.concat(dayLocations[day]);
+                }
+            }
+            
+            // If no locations found, create basic route
+            if (extractedLocations.length === 0) {
+                createBasicRingOfKerryRoute();
             }
             
             console.log("Extracted " + extractedLocations.length + " locations from itinerary");
+        }
+        
+        function createBasicRingOfKerryRoute() {
+            console.log("Creating basic Ring of Kerry route");
+            var duration = parseInt(currentUserData.duration) || 3;
+            
+            // Standard Ring of Kerry routes based on duration
+            var routes = {
+                1: [
+                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 1 },
+                    { name: 'Ladies View', lat: 51.9967, lng: -9.5733, day: 1 },
+                    { name: 'Molls Gap', lat: 51.9333, lng: -9.6333, day: 1 },
+                    { name: 'Kenmare', lat: 51.8833, lng: -9.5833, day: 1 },
+                    { name: 'Sneem', lat: 51.8333, lng: -9.9000, day: 1 },
+                    { name: 'Waterville', lat: 51.8333, lng: -10.1667, day: 1 },
+                    { name: 'Cahersiveen', lat: 51.9489, lng: -10.2225, day: 1 },
+                    { name: 'Killorglin', lat: 52.1167, lng: -9.8000, day: 1 },
+                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 1 }
+                ],
+                2: [
+                    // Day 1: Killarney to Kenmare
+                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 1 },
+                    { name: 'Muckross House', lat: 52.0167, lng: -9.5167, day: 1 },
+                    { name: 'Ladies View', lat: 51.9967, lng: -9.5733, day: 1 },
+                    { name: 'Molls Gap', lat: 51.9333, lng: -9.6333, day: 1 },
+                    { name: 'Kenmare', lat: 51.8833, lng: -9.5833, day: 1 },
+                    
+                    // Day 2: Kenmare around Ring back to Killarney
+                    { name: 'Kenmare', lat: 51.8833, lng: -9.5833, day: 2 },
+                    { name: 'Sneem', lat: 51.8333, lng: -9.9000, day: 2 },
+                    { name: 'Waterville', lat: 51.8333, lng: -10.1667, day: 2 },
+                    { name: 'Cahersiveen', lat: 51.9489, lng: -10.2225, day: 2 },
+                    { name: 'Killorglin', lat: 52.1167, lng: -9.8000, day: 2 },
+                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 2 }
+                ],
+                3: [
+                    // Day 1: Killarney to Kenmare
+                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 1 },
+                    { name: 'Muckross House', lat: 52.0167, lng: -9.5167, day: 1 },
+                    { name: 'Ladies View', lat: 51.9967, lng: -9.5733, day: 1 },
+                    { name: 'Molls Gap', lat: 51.9333, lng: -9.6333, day: 1 },
+                    { name: 'Kenmare', lat: 51.8833, lng: -9.5833, day: 1 },
+                    
+                    // Day 2: Kenmare to Waterville
+                    { name: 'Kenmare', lat: 51.8833, lng: -9.5833, day: 2 },
+                    { name: 'Staigue Fort', lat: 51.7833, lng: -9.9833, day: 2 },
+                    { name: 'Derrynane Beach', lat: 51.7500, lng: -10.1167, day: 2 },
+                    { name: 'Waterville', lat: 51.8333, lng: -10.1667, day: 2 },
+                    
+                    // Day 3: Waterville to Killarney
+                    { name: 'Waterville', lat: 51.8333, lng: -10.1667, day: 3 },
+                    { name: 'Portmagee', lat: 51.8833, lng: -10.3833, day: 3 },
+                    { name: 'Cahersiveen', lat: 51.9489, lng: -10.2225, day: 3 },
+                    { name: 'Killorglin', lat: 52.1167, lng: -9.8000, day: 3 },
+                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 3 }
+                ]
+            };
+            
+            // Use route based on duration, fallback to 3-day route
+            extractedLocations = routes[duration] || routes[3];
+        }
+        
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            var R = 6371; // Earth's radius in km
+            var dLat = (lat2 - lat1) * Math.PI / 180;
+            var dLng = (lng2 - lng1) * Math.PI / 180;
+            var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLng/2) * Math.sin(dLng/2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+        
+        function findConnectingLocation(from, to) {
+            // Find a logical connecting point between two locations
+            var midLat = (from.lat + to.lat) / 2;
+            var midLng = (from.lng + to.lng) / 2;
+            
+            // Find closest Ring of Kerry location to midpoint
+            var closestLocation = null;
+            var minDistance = Infinity;
+            
+            for (var key in ringOfKerryLocations) {
+                var location = ringOfKerryLocations[key];
+                var distance = calculateDistance(midLat, midLng, location.lat, location.lng);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestLocation = {
+                        name: location.name,
+                        lat: location.lat,
+                        lng: location.lng,
+                        day: to.day
+                    };
+                }
+            }
+            
+            return closestLocation;
         }
         
         function addMarkersToMap() {
