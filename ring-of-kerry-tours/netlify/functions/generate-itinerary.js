@@ -53,7 +53,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Enhanced prompt that creates truly personalized, unique itineraries
+    // Enhanced prompt that creates truly personalized, unique itineraries with accommodation focus
     const prompt = `You are an expert Irish tourism guide creating a completely personalized ${userData.duration}-day Ring of Kerry itinerary. You have carefully analyzed this traveler's specific requirements and will create recommendations that directly address their stated preferences.
 
 **TRAVELER PROFILE ANALYSIS:**
@@ -72,6 +72,20 @@ ${userData.specialRequests ? `\n- **IMPORTANT SPECIAL REQUESTS: "${userData.spec
 ${userData.mustSee ? `\n- **MUST-SEE LOCATIONS: "${userData.mustSee}"** - These specific places must be included in the itinerary` : ''}
 ${userData.concerns ? `\n- **CONCERNS TO AVOID: "${userData.concerns}"** - Plan carefully around these concerns` : ''}
 
+**ACCOMMODATION STRATEGY - CRITICAL FOCUS:**
+${getAccommodationStrategy(userData.accommodation, userData.budget, userData.groupSize)}
+
+**MANDATORY ACCOMMODATION REQUIREMENTS FOR EACH NIGHT:**
+1. **Provide 2-3 Specific Accommodation Recommendations per Night/Location**
+2. **For Each Accommodation Include:**
+   - Exact property name and location
+   - Approximate nightly rate for ${userData.groupSize} people
+   - Key amenities and features that match their "${userData.accommodation}" preference
+   - Contact information (phone/website)
+   - Why it suits their specific budget (€${userData.budget}/person/day) and style
+   - How it accommodates any special requirements: ${userData.dietaryRequirements || 'general dining'}, ${userData.accessibilityNeeds || 'standard access'}
+   - Unique features that align with their interests: ${userData.interests?.join(', ') || 'general sightseeing'}
+
 **MANDATORY PERSONALIZATION BASED ON STATED REQUIREMENTS:**
 
 ${generateDetailedPersonalization(userData)}
@@ -88,6 +102,36 @@ This itinerary has been specifically designed around your interests in ${userDat
 ${userData.dietaryRequirements ? `\n**DIETARY REQUIREMENT REMINDER:** Every restaurant recommendation MUST specifically explain how "${userData.dietaryRequirements}" will be accommodated, with exact menu options and safety protocols.` : ''}
 
 ${userData.accessibilityNeeds ? `\n**ACCESSIBILITY REQUIREMENT REMINDER:** Every venue MUST be verified as suitable for "${userData.accessibilityNeeds}" with specific details about access, facilities, and assistance available.` : ''}
+
+**ENHANCED ITINERARY FORMAT - ACCOMMODATION FOCUS:**
+
+**DAY X: [LOCATION/THEME]**
+--------------------------------
+
+**ACCOMMODATION FOR TONIGHT:**
+🏨 **Recommendation 1:** [Exact Property Name]
+- **Location:** [Specific address/area]
+- **Rate:** €[X]/night for ${userData.groupSize} people (fits €${userData.budget}/day budget)
+- **Style Match:** Perfect for your "${userData.accommodation}" preference because [specific reasons]
+- **Key Features:** [Amenities that match their interests and requirements]
+- **Contact:** [Phone/website for booking]
+${userData.dietaryRequirements ? `- **Dietary Accommodation:** How they handle "${userData.dietaryRequirements}" for breakfast/meals` : ''}
+${userData.accessibilityNeeds ? `- **Accessibility:** Specific features for "${userData.accessibilityNeeds}"` : ''}
+
+🏨 **Recommendation 2:** [Alternative Property Name]
+[Same detailed format]
+
+🏨 **Recommendation 3:** [Budget/Premium Alternative]
+[Same detailed format]
+
+**MORNING:**
+[Time] - [Activity with specific costs, accessibility notes, and verification reminders]
+
+**AFTERNOON:**
+[Time] - [Activity with specific costs, accessibility notes, and verification reminders]
+
+**EVENING:**
+[Time] - [Activity with specific costs, accessibility notes, and verification reminders]
 
 **DAILY STRUCTURE (tailored to your specific needs):**
 - **Morning (8:00-12:00):** Activities selected for optimal ${userData.travelMonth} conditions and your interest in ${userData.interests?.[0] || 'sightseeing'}
@@ -114,6 +158,7 @@ ${getMonthSpecificGuidance(userData.travelMonth)}
 ${getBudgetStrategy(userData.budget, userData.interests)}
 
 **CRITICAL INSTRUCTIONS:**
+- EVERY night must include 2-3 specific accommodation options with exact names and details
 - Reference the exact phrases "${userData.dietaryRequirements || ''}" and "${userData.accessibilityNeeds || ''}" when relevant
 - Every food recommendation must explain HOW the dietary requirement will be met
 - Every venue must confirm suitability for the stated accessibility need
@@ -123,7 +168,7 @@ ${getBudgetStrategy(userData.budget, userData.interests)}
 
 Create a COMPLETE ${userData.duration}-day itinerary that demonstrates you've listened to and analyzed every stated requirement. Each recommendation should feel personally selected and include specific explanations of how requirements are met.
 
-This must be the COMPLETE itinerary covering all ${userData.duration} days - no follow-up needed.`;
+This must be the COMPLETE itinerary covering all ${userData.duration} days with detailed accommodation options for each night - no follow-up needed.`;
 
     console.log('Calling Claude API...');
 
@@ -190,6 +235,21 @@ This must be the COMPLETE itinerary covering all ${userData.duration} days - no 
     itinerary = itinerary.replace(/Do you want me to.*?\?/gi, '');
     itinerary = itinerary.replace(/Let me know if you.*?\./gi, '');
 
+    // Add disclaimer to every generated itinerary
+    const disclaimer = `
+
+IMPORTANT DISCLAIMER:
+These suggestions are for informational purposes only. Please verify all information before your visit:
+- Restaurant opening hours, menus, and dietary accommodations
+- Accommodation availability, rates, and accessibility features  
+- Attraction opening times, admission fees, and accessibility
+- Road conditions, parking availability, and weather conditions
+- Booking requirements and contact information
+
+Ring of Kerry Tours accepts no liability for errors, omissions, or changes in information provided. Always confirm details directly with venues, especially for dietary requirements and accessibility needs.`;
+
+    itinerary += disclaimer;
+
     // If the response seems incomplete, add a note
     if (itinerary.length < 1000 || !itinerary.toLowerCase().includes(`day ${userData.duration}`)) {
       itinerary += '\n\n*This is your complete itinerary! If you need any modifications or have specific requests, use the "Customize Trip" button below.*';
@@ -234,6 +294,110 @@ This must be the COMPLETE itinerary covering all ${userData.duration} days - no 
     };
   }
 };
+
+// Enhanced accommodation strategy function - NEW
+function getAccommodationStrategy(accommodationType, budget, groupSize) {
+  const budgetNum = parseInt(budget);
+  const groupNum = parseInt(groupSize);
+  
+  // Calculate accommodation budget (typically 40-60% of daily budget)
+  const accomBudgetPercentage = budgetNum <= 100 ? 0.5 : budgetNum <= 200 ? 0.45 : 0.4;
+  const accommodationBudget = Math.round(budgetNum * accomBudgetPercentage * groupNum);
+  
+  switch(accommodationType) {
+    case 'self-catering':
+    case 'holiday-homes':
+      if (budgetNum < 100) {
+        return `🏠 **Self-Catering Budget Strategy (€${accommodationBudget}/night total):**
+        - Target holiday homes, apartments, and vacation rentals €60-90/night for ${groupNum} people
+        - Focus on properties with full kitchens, parking, and Wi-Fi
+        - Include Airbnb, local rental agencies, and holiday home specialists
+        - Emphasize cost savings from cooking meals vs dining out
+        - Highlight grocery stores and markets near accommodations
+        - Look for properties with washing machines and practical amenities`;
+      } else if (budgetNum < 200) {
+        return `🏠 **Self-Catering Mid-Range Strategy (€${accommodationBudget}/night total):**
+        - Premium holiday homes and well-equipped apartments €120-180/night for ${groupNum} people
+        - Modern amenities: dishwashers, quality appliances, good Wi-Fi, parking
+        - Mix of rural retreats with character and convenient town center locations
+        - Include properties with outdoor spaces, fireplaces, or scenic views
+        - Highlight nearby specialty food shops, farmers markets, and gourmet stores`;
+      } else {
+        return `🏠 **Self-Catering Luxury Strategy (€${accommodationBudget}/night total):**
+        - Luxury holiday homes, premium cottages, designer apartments €200+/night for ${groupNum} people
+        - Premium features: hot tubs, fireplaces, exceptional views, unique character
+        - Historic properties, architect-designed homes, exceptional locations
+        - Include concierge services, grocery delivery, potential chef services
+        - Focus on unique properties that create memorable experiences`;
+      }
+    
+    case 'bed-breakfast':
+    case 'b&b':
+      if (budgetNum < 100) {
+        return `🛏️ **B&B Budget Strategy (€${Math.round(accommodationBudget/groupNum)}/person/night):**
+        - Traditional Irish B&Bs €50-75 per person including Irish breakfast
+        - Family-run establishments with authentic hospitality and local knowledge
+        - Emphasis on hearty breakfasts that reduce lunch costs
+        - Include B&Bs with parking, central locations, and good reviews
+        - Focus on value for money with genuine Irish welcome`;
+      } else if (budgetNum < 200) {
+        return `🛏️ **B&B Mid-Range Strategy (€${Math.round(accommodationBudget/groupNum)}/person/night):**
+        - Superior B&Bs and boutique guesthouses €85-130 per person including breakfast
+        - En-suite bathrooms, quality furnishings, some with evening meals available
+        - Award-winning establishments known for excellent hospitality
+        - Include B&Bs with unique character, gardens, or special locations
+        - May offer packed lunches, local tours, or concierge services`;
+      } else {
+        return `🛏️ **B&B Luxury Strategy (€${Math.round(accommodationBudget/groupNum)}/person/night):**
+        - Luxury B&Bs, manor houses, country estates €150+ per person including gourmet breakfast
+        - Historic properties, exceptional locations, premium amenities
+        - May include spa services, fine dining, concierge assistance
+        - Focus on unique experiences: castle stays, historic homes, award-winning properties
+        - Emphasis on exceptional hospitality and memorable experiences`;
+      }
+    
+    case '3-4-star-hotels':
+    case 'hotels':
+      if (budgetNum < 150) {
+        return `🏨 **3-4 Star Hotel Budget Strategy (€${accommodationBudget}/night for ${groupNum} people):**
+        - Quality 3-star hotels and well-located properties €100-140/night total
+        - Standard amenities: restaurant, bar, Wi-Fi, parking included
+        - Focus on town center locations for walking convenience
+        - Include both hotel chains and independent properties with character
+        - Breakfast options available, family-friendly facilities`;
+      } else if (budgetNum < 250) {
+        return `🏨 **3-4 Star Hotel Mid-Range Strategy (€${accommodationBudget}/night for ${groupNum} people):**
+        - Superior 4-star hotels €160-240/night total
+        - Enhanced amenities: spa facilities, quality restaurants, room service
+        - Prime locations with views, historic significance, or unique character
+        - Include boutique hotels and established brands with excellent service
+        - Focus on comfort, convenience, and memorable stays`;
+      } else {
+        return `🏨 **3-4 Star Hotel Premium Strategy (€${accommodationBudget}/night for ${groupNum} people):**
+        - Premium 4-star and boutique hotels €250+/night total
+        - Luxury amenities: spa, fine dining, concierge services, premium locations
+        - Historic hotels, unique properties, exceptional service levels
+        - Include properties with special character or award recognition
+        - Focus on creating exceptional accommodation experiences`;
+      }
+    
+    case '5-star-luxury':
+    case 'luxury':
+      return `🌟 **5-Star Luxury Strategy (€${accommodationBudget}/night for ${groupNum} people):**
+      - Luxury 5-star hotels, castle accommodations, resort properties €350+/night total
+      - World-class amenities: multiple restaurants, spas, golf courses, concierge
+      - Historic castles, manor houses, award-winning luxury properties
+      - Include Michelin-starred dining, exclusive experiences, premium service
+      - Focus on creating unforgettable luxury experiences unique to Kerry
+      - May include helicopter transfers, private tours, exclusive access to attractions`;
+    
+    default:
+      return `🏨 **Flexible Accommodation Strategy (€${accommodationBudget}/night for ${groupNum} people):**
+      - Mix of B&Bs and 3-star hotels based on location and availability
+      - Focus on quality, location, and value for money within budget
+      - Include variety of accommodation types for comparison and flexibility`;
+  }
+}
 
 // Helper function to convert activity level to description
 function getActivityDescription(level) {
