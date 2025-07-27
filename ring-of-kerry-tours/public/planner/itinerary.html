@@ -1105,7 +1105,7 @@
         }
         
         function showAllDaysRoute() {
-            console.log("Showing all days route");
+            console.log("Showing complete tour route");
             
             if (!map || extractedLocations.length === 0) return;
             
@@ -1114,13 +1114,34 @@
                 marker.setVisible(true);
             });
             
-            // Create route for Day 1 if available
-            var day1Locations = extractedLocations.filter(function(loc) {
-                return loc.day === 1;
-            });
+            // Create complete tour route connecting all days
+            var allLocations = [];
+            var duration = parseInt(currentUserData.duration) || 3;
             
-            if (day1Locations.length > 1) {
-                createRoute(day1Locations, routeColors[0]);
+            for (var day = 1; day <= duration; day++) {
+                var dayLocations = extractedLocations.filter(function(loc) {
+                    return loc.day === day;
+                });
+                
+                if (dayLocations.length > 0) {
+                    allLocations = allLocations.concat(dayLocations);
+                }
+            }
+            
+            if (allLocations.length > 1) {
+                // Remove duplicates (same location on consecutive days)
+                var uniqueLocations = [];
+                for (var i = 0; i < allLocations.length; i++) {
+                    var current = allLocations[i];
+                    var previous = allLocations[i - 1];
+                    
+                    if (!previous || 
+                        calculateDistance(current.lat, current.lng, previous.lat, previous.lng) > 5) {
+                        uniqueLocations.push(current);
+                    }
+                }
+                
+                createRoute(uniqueLocations, '#4a7c59', 'Complete Ring of Kerry Tour');
             }
             
             currentDayFilter = 'all';
@@ -1128,7 +1149,7 @@
         }
         
         function showDay(dayNumber) {
-            console.log("Showing day " + dayNumber);
+            console.log("Showing day " + dayNumber + " route");
             
             if (!map) return;
             
@@ -1138,33 +1159,60 @@
             });
             
             // Show only markers for selected day
+            var visibleMarkers = 0;
             markers.forEach(function(marker) {
                 if (marker.day === dayNumber) {
                     marker.setVisible(true);
+                    visibleMarkers++;
                 }
             });
             
-            // Show route for selected day
+            // Create route for selected day only
             var dayLocations = extractedLocations.filter(function(loc) {
                 return loc.day === dayNumber;
             });
             
             if (dayLocations.length > 1) {
-                createRoute(dayLocations, routeColors[dayNumber - 1]);
+                var routeColor = routeColors[dayNumber - 1] || '#4a7c59';
+                createRoute(dayLocations, routeColor, 'Day ' + dayNumber + ' Route');
+            } else if (dayLocations.length === 1) {
+                // Single location - just center map on it
+                map.setCenter({ lat: dayLocations[0].lat, lng: dayLocations[0].lng });
+                map.setZoom(12);
             }
+            
+            console.log("Day " + dayNumber + ": showing " + visibleMarkers + " markers and " + dayLocations.length + " route points");
             
             currentDayFilter = dayNumber;
             updateActiveMapButton('Day ' + dayNumber);
         }
         
-        function createRoute(locations, color) {
+        function createRoute(locations, color, routeName) {
             if (!directionsService || !directionsRenderer || locations.length < 2) {
+                console.log("Cannot create route: insufficient data");
                 return;
             }
+            
+            console.log("Creating route: " + routeName + " with " + locations.length + " locations");
             
             var waypoints = locations.map(function(loc) {
                 return { lat: loc.lat, lng: loc.lng };
             });
+            
+            // Limit waypoints to Google Maps API limits (max 25 waypoints including origin/destination)
+            var maxWaypoints = 23; // 25 total - 2 for origin/destination
+            if (waypoints.length > maxWaypoints + 2) {
+                // Keep first, last, and evenly distributed points in between
+                var step = Math.floor((waypoints.length - 2) / maxWaypoints);
+                var reducedWaypoints = [waypoints[0]];
+                
+                for (var i = step; i < waypoints.length - 1; i += step) {
+                    reducedWaypoints.push(waypoints[i]);
+                }
+                
+                reducedWaypoints.push(waypoints[waypoints.length - 1]);
+                waypoints = reducedWaypoints;
+            }
             
             var request = {
                 origin: waypoints[0],
@@ -1174,7 +1222,8 @@
                 }),
                 travelMode: google.maps.TravelMode.DRIVING,
                 unitSystem: google.maps.UnitSystem.METRIC,
-                region: 'IE'
+                region: 'IE',
+                optimizeWaypoints: false // Keep order as specified
             };
             
             directionsRenderer.setOptions({
@@ -1188,8 +1237,30 @@
             directionsService.route(request, function(result, status) {
                 if (status === 'OK') {
                     directionsRenderer.setDirections(result);
+                    console.log("Route created successfully: " + routeName);
+                    
+                    // Show route info in console for debugging
+                    var route = result.routes[0];
+                    if (route && route.legs) {
+                        var totalDistance = 0;
+                        var totalDuration = 0;
+                        route.legs.forEach(function(leg) {
+                            totalDistance += leg.distance.value;
+                            totalDuration += leg.duration.value;
+                        });
+                        console.log(routeName + " - Distance: " + (totalDistance / 1000).toFixed(1) + "km, Duration: " + Math.round(totalDuration / 60) + " minutes");
+                    }
                 } else {
-                    console.error('Directions request failed due to ' + status);
+                    console.error('Directions request failed for ' + routeName + ' due to ' + status);
+                    
+                    // Fallback: just show markers without route
+                    if (locations.length > 0) {
+                        var bounds = new google.maps.LatLngBounds();
+                        locations.forEach(function(loc) {
+                            bounds.extend({ lat: loc.lat, lng: loc.lng });
+                        });
+                        map.fitBounds(bounds);
+                    }
                 }
             });
         }
@@ -1301,6 +1372,12 @@
             
             var formattedItinerary = itinerary;
             
+            // Remove AI continuation messages that shouldn't be shown to users
+            formattedItinerary = formattedItinerary.replace(/\[Continues with[^[\]]*\]/gi, '');
+            formattedItinerary = formattedItinerary.replace(/\[.*character limit.*\]/gi, '');
+            formattedItinerary = formattedItinerary.replace(/Would you like me to[^?]*\?/gi, '');
+            formattedItinerary = formattedItinerary.replace(/\(Note:[^)]*\)/gi, '');
+            
             // First, convert **bold** to styled strong tags (before adding <br> tags)
             formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             
@@ -1325,8 +1402,14 @@
             // Close accommodation recommendation divs
             formattedItinerary = formattedItinerary.replace(/(\- \*\*Contact:\*\*[^\n]+)/g, '$1</div>');
             
+            // Clean up any remaining incomplete sections
+            formattedItinerary = formattedItinerary.replace(/\[.*?\]/g, ''); // Remove any remaining [bracketed] content
+            
             // Now convert line breaks to HTML
             formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
+            
+            // Clean up excessive line breaks
+            formattedItinerary = formattedItinerary.replace(/(<br>\s*){3,}/g, '<br><br>');
             
             console.log("Formatted itinerary:", formattedItinerary.substring(0, 500));
             
