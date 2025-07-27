@@ -219,14 +219,6 @@
             background: #f0f8ff;
             border-radius: 10px;
             border-left: 4px solid #007bff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .itinerary-content h3::before {
-            content: '🕒';
-            font-size: 1.1em;
         }
         
         .itinerary-content h4 {
@@ -246,41 +238,6 @@
             background: #f8f9fa;
             padding: 2px 6px;
             border-radius: 4px;
-        }
-        
-        .day-section {
-            margin-bottom: 40px;
-            border: 1px solid #e9ecef;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        
-        .time-block {
-            background: #fff;
-            margin: 20px 0;
-            border-radius: 10px;
-            border: 1px solid #f0f0f0;
-            overflow: hidden;
-        }
-        
-        .activity-content {
-            padding: 20px;
-            background: #fafafa;
-            border-left: 3px solid #4a7c59;
-            margin: 10px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .location-highlight {
-            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
-            color: #2d5a3d;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-weight: 600;
-            display: inline-block;
-            margin: 0 3px;
-            border: 1px solid #d4edda;
         }
         
         .error-message {
@@ -690,12 +647,15 @@
                 specialRequirements.push('<span class="requirement-highlight special">✨ Special Requests: ' + userData.specialRequests + '</span>');
             }
             
-            if (userData.travelStyle && userData.travelStyle !== 'balanced pace') {
-                specialRequirements.push('<span class="requirement-highlight style">🎯 Travel Style: ' + userData.travelStyle + '</span>');
+            if (userData.pace && userData.pace !== 'moderate') {
+                var paceDisplay = userData.pace.charAt(0).toUpperCase() + userData.pace.slice(1) + ' pace';
+                specialRequirements.push('<span class="requirement-highlight style">🎯 Travel Style: ' + paceDisplay + '</span>');
             }
             
-            if (userData.accommodation && userData.accommodation !== 'mid-range hotels/B&Bs') {
-                specialRequirements.push('<span class="requirement-highlight accommodation">🏨 Accommodation: ' + userData.accommodation + '</span>');
+            // UPDATED: Display accommodation type preference
+            if (userData.accommodation && userData.accommodation !== 'flexible') {
+                var accommodationDisplay = getAccommodationDisplayName(userData.accommodation);
+                specialRequirements.push('<span class="requirement-highlight accommodation">🏨 Accommodation: ' + accommodationDisplay + '</span>');
             }
             
             // Add special requirements to summary if any exist
@@ -708,6 +668,18 @@
             }
             
             summaryElement.innerHTML = summaryHTML;
+        }
+        
+        // NEW: Function to convert accommodation values to display names
+        function getAccommodationDisplayName(accommodationType) {
+            var displayNames = {
+                'self-catering': 'Self-Catering Properties',
+                'bed-breakfast': 'Bed & Breakfast',
+                '3-4-star-hotels': '3-4 Star Hotels',
+                '5-star-luxury': '5-Star Luxury',
+                'flexible': 'Flexible'
+            };
+            return displayNames[accommodationType] || accommodationType;
         }
         
         function populateItinerary(itinerary) {
@@ -728,14 +700,23 @@
             // Convert "DAY X:" patterns to h2 headers (before <br> conversion)
             formattedItinerary = formattedItinerary.replace(/^(DAY \d+[^\n]*)/gm, '<h2>$1</h2>');
             
+            // NEW: Convert "ACCOMMODATION FOR TONIGHT:" patterns to special h3 headers
+            formattedItinerary = formattedItinerary.replace(/^(ACCOMMODATION FOR TONIGHT:)/gm, '<h3 style="background: #e8f5e8; color: #2d5a3d; border-left-color: #4a7c59;">🏨 $1</h3>');
+            
             // Remove the dashed lines that follow day headers (they're just visual clutter now)
-            formattedItinerary = formattedItinerary.replace(/^-{20,}$/gm, '<div class="day-separator"></div>');
+            formattedItinerary = formattedItinerary.replace(/^-{20,}$/gm, '<div style="height: 2px; background: linear-gradient(90deg, #4a7c59, transparent); margin: 20px 0;"></div>');
             
             // Convert "MORNING:", "AFTERNOON:", "EVENING:" to h3 headers (before <br> conversion)
-            formattedItinerary = formattedItinerary.replace(/^(MORNING|AFTERNOON|EVENING):$/gm, '<h3>$1</h3>');
+            formattedItinerary = formattedItinerary.replace(/^(MORNING|AFTERNOON|EVENING):$/gm, '<h3>🕒 $1</h3>');
             
-            // Convert time patterns like "8:00 AM" etc to h3 headers WITHOUT clock emoji
-            formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '<h3>$1</h3>');
+            // Convert time patterns like "8:00 AM" etc to h3 headers
+            formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '<h3>🕒 $1</h3>');
+            
+            // NEW: Style accommodation recommendations within content
+            formattedItinerary = formattedItinerary.replace(/🏨 \*\*Recommendation \d+:\*\*/g, '<div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-left: 4px solid #4a7c59; border-radius: 8px;"><strong style="color: #2d5a3d; font-size: 1.1em;">🏨 Accommodation Option:</strong>');
+            
+            // Close accommodation recommendation divs
+            formattedItinerary = formattedItinerary.replace(/(\- \*\*Contact:\*\*[^\n]+)/g, '$1</div>');
             
             // Now convert line breaks to HTML
             formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
@@ -833,6 +814,26 @@
             content += '<div class="summary">';
             content += '<strong>' + userData.duration + '-Day Itinerary</strong> • ' + userData.travelMonth + ' 2025 • ' + userData.groupSize + ' people • €' + userData.budget + '/day budget<br>';
             content += 'Interests: ' + interests;
+            
+            // Add accommodation preference to printable content
+            if (userData.accommodation && userData.accommodation !== 'flexible') {
+                content += '<br>Accommodation Preference: ' + getAccommodationDisplayName(userData.accommodation);
+            }
+            
+            // Add special requirements to printable content
+            if (userData.dietaryRequirements || userData.accessibilityNeeds || userData.specialRequests) {
+                content += '<br><strong>Special Requirements:</strong>';
+                if (userData.dietaryRequirements) {
+                    content += '<br>• Dietary: ' + userData.dietaryRequirements;
+                }
+                if (userData.accessibilityNeeds) {
+                    content += '<br>• Accessibility: ' + userData.accessibilityNeeds;
+                }
+                if (userData.specialRequests) {
+                    content += '<br>• Special Requests: ' + userData.specialRequests;
+                }
+            }
+            
             content += '</div>';
             content += document.getElementById('itineraryContent').innerHTML;
             content += '<hr style="margin: 30px 0;">';
@@ -851,8 +852,28 @@
             
             var content = 'RING OF KERRY ADVENTURE\n';
             content += userData.duration + '-Day Itinerary • ' + userData.travelMonth + ' 2025 • ' + userData.groupSize + ' people • €' + userData.budget + '/day budget\n';
-            content += 'Interests: ' + interests + '\n\n';
-            content += plainText + '\n\n';
+            content += 'Interests: ' + interests + '\n';
+            
+            // Add accommodation preference to text content
+            if (userData.accommodation && userData.accommodation !== 'flexible') {
+                content += 'Accommodation Preference: ' + getAccommodationDisplayName(userData.accommodation) + '\n';
+            }
+            
+            // Add special requirements to text content
+            if (userData.dietaryRequirements || userData.accessibilityNeeds || userData.specialRequests) {
+                content += '\nSPECIAL REQUIREMENTS:\n';
+                if (userData.dietaryRequirements) {
+                    content += '• Dietary: ' + userData.dietaryRequirements + '\n';
+                }
+                if (userData.accessibilityNeeds) {
+                    content += '• Accessibility: ' + userData.accessibilityNeeds + '\n';
+                }
+                if (userData.specialRequests) {
+                    content += '• Special Requests: ' + userData.specialRequests + '\n';
+                }
+            }
+            
+            content += '\n' + plainText + '\n\n';
             content += 'Generated by Ring of Kerry Tours - ringofkerrytours.com';
             
             return content;
