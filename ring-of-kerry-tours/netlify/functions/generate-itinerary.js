@@ -157,6 +157,9 @@ ${getMonthSpecificGuidance(userData.travelMonth)}
 **BUDGET OPTIMIZATION FOR €${userData.budget}/DAY:**
 ${getBudgetStrategy(userData.budget, userData.interests)}
 
+**VERIFICATION REMINDERS:**
+Throughout your itinerary, please remember to verify current opening hours, availability, and accommodation capabilities directly with venues, especially for dietary requirements and accessibility needs.
+
 **CRITICAL INSTRUCTIONS:**
 - EVERY night must include 2-3 specific accommodation options with exact names and details
 - Reference the exact phrases "${userData.dietaryRequirements || ''}" and "${userData.accessibilityNeeds || ''}" when relevant
@@ -235,24 +238,11 @@ This must be the COMPLETE itinerary covering all ${userData.duration} days with 
     itinerary = itinerary.replace(/Do you want me to.*?\?/gi, '');
     itinerary = itinerary.replace(/Let me know if you.*?\./gi, '');
 
-    // Add disclaimer to every generated itinerary
-    const disclaimer = `
-
-IMPORTANT DISCLAIMER:
-These suggestions are for informational purposes only. Please verify all information before your visit:
-- Restaurant opening hours, menus, and dietary accommodations
-- Accommodation availability, rates, and accessibility features  
-- Attraction opening times, admission fees, and accessibility
-- Road conditions, parking availability, and weather conditions
-- Booking requirements and contact information
-
-Ring of Kerry Tours accepts no liability for errors, omissions, or changes in information provided. Always confirm details directly with venues, especially for dietary requirements and accessibility needs.`;
-
-    itinerary += disclaimer;
+    // REMOVED: No longer adding disclaimer here since it's handled by the frontend
 
     // If the response seems incomplete, add a note
     if (itinerary.length < 1000 || !itinerary.toLowerCase().includes(`day ${userData.duration}`)) {
-      itinerary += '\n\n*This is your complete itinerary! If you need any modifications or have specific requests, use the "Customize Trip" button below.*';
+      itinerary += '\n\n*This is your complete itinerary! If you need any modifications or have specific requests, please contact us.*';
     }
 
     // Store in database for sharing (simplified storage)
@@ -295,7 +285,7 @@ Ring of Kerry Tours accepts no liability for errors, omissions, or changes in in
   }
 };
 
-// Enhanced accommodation strategy function - NEW
+// Enhanced accommodation strategy function
 function getAccommodationStrategy(accommodationType, budget, groupSize) {
   const budgetNum = parseInt(budget);
   const groupNum = parseInt(groupSize);
