@@ -187,94 +187,6 @@
             border-color: #4a7c59;
             color: #4a7c59;
         }
-
-        /* Map section styles */
-        .map-section {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        
-        .map-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .map-title {
-            font-size: 1.5em;
-            color: #2d5a3d;
-            font-weight: 600;
-        }
-        
-        .map-controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .map-btn {
-            padding: 8px 16px;
-            border: 2px solid #4a7c59;
-            border-radius: 20px;
-            background: white;
-            color: #4a7c59;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .map-btn:hover {
-            background: #4a7c59;
-            color: white;
-        }
-        
-        .map-btn.active {
-            background: #4a7c59;
-            color: white;
-        }
-        
-        #map {
-            height: 400px;
-            width: 100%;
-            border-radius: 15px;
-            border: 1px solid #e0e0e0;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            background: #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-style: italic;
-        }
-        
-        .map-legend {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.9em;
-            color: #666;
-        }
-        
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
         
         .itinerary-content {
             background: white;
@@ -498,28 +410,8 @@
             .itinerary-content {
                 padding: 25px;
             }
-            
-            .map-section {
-                padding: 20px;
-            }
-            
-            #map {
-                height: 300px;
-            }
-            
-            .map-header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .map-legend {
-                justify-content: center;
-                gap: 15px;
-            }
         }
     </style>
-    <!-- Google Maps API -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAxna1lvu0xrFFHw2t0uTNHqZMDYFAONJs&callback=initGoogleMaps&libraries=geometry"></script>
 </head>
 <body>
     <div class="container">
@@ -549,45 +441,6 @@
                 <button class="btn btn-primary" onclick="showDownloadOptions()">📱 Download Itinerary</button>
                 <button class="btn btn-secondary" onclick="showShareModal()">📤 Share</button>
                 <button class="btn btn-outline" onclick="printItinerary()">🖨️ Print</button>
-            </div>
-            
-            <!-- Interactive Map Section -->
-            <div class="map-section">
-                <div class="map-header">
-                    <h2 class="map-title">🗺️ Your Route Map</h2>
-                    <div class="map-controls">
-                        <button class="map-btn active" onclick="showAllDays()" id="allDaysBtn">All Days</button>
-                        <button class="map-btn" onclick="showDay(1)" id="day1Btn">Day 1</button>
-                        <button class="map-btn" onclick="showDay(2)" id="day2Btn" style="display: none;">Day 2</button>
-                        <button class="map-btn" onclick="showDay(3)" id="day3Btn" style="display: none;">Day 3</button>
-                        <button class="map-btn" onclick="showDay(4)" id="day4Btn" style="display: none;">Day 4</button>
-                        <button class="map-btn" onclick="showDay(5)" id="day5Btn" style="display: none;">Day 5</button>
-                        <button class="map-btn" onclick="showDay(6)" id="day6Btn" style="display: none;">Day 6</button>
-                        <button class="map-btn" onclick="showDay(7)" id="day7Btn" style="display: none;">Day 7</button>
-                        <button class="map-btn" onclick="toggleSatellite()" id="satelliteBtn">Satellite</button>
-                    </div>
-                </div>
-                <div id="map">
-                    🗺️ Loading interactive map...
-                </div>
-                <div class="map-legend">
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #ff4444;"></div>
-                        <span>Day 1 Stops</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #4444ff;"></div>
-                        <span>Day 2 Stops</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #44ff44;"></div>
-                        <span>Day 3+ Stops</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #ff8800;"></div>
-                        <span>Accommodations</span>
-                    </div>
-                </div>
             </div>
             
             <div class="itinerary-content" id="itineraryContent">
@@ -685,57 +538,10 @@
         var currentUserData = null;
         var itineraryId = null;
         
-        // Google Maps variables
-        var map = null;
-        var directionsService = null;
-        var directionsRenderer = null;
-        var markers = [];
-        var routeColors = ['#ff4444', '#4444ff', '#44ff44', '#ff8800', '#8844ff', '#44ffff', '#ff44ff'];
-        var isSatelliteView = false;
-        var extractedLocations = [];
-        var currentDayFilter = 'all';
-        
-        // Ring of Kerry key locations with coordinates
-        var ringOfKerryLocations = {
-            'killarney': { lat: 52.0599, lng: -9.5044, name: 'Killarney' },
-            'kenmare': { lat: 51.8833, lng: -9.5833, name: 'Kenmare' },
-            'sneem': { lat: 51.8333, lng: -9.9000, name: 'Sneem' },
-            'waterville': { lat: 51.8333, lng: -10.1667, name: 'Waterville' },
-            'cahersiveen': { lat: 51.9489, lng: -10.2225, name: 'Cahersiveen' },
-            'glenbeigh': { lat: 52.1167, lng: -9.9167, name: 'Glenbeigh' },
-            'killorglin': { lat: 52.1167, lng: -9.8000, name: 'Killorglin' },
-            'ladies view': { lat: 51.9967, lng: -9.5733, name: 'Ladies View' },
-            'moll gap': { lat: 51.9333, lng: -9.6333, name: 'Molls Gap' },
-            'molls gap': { lat: 51.9333, lng: -9.6333, name: 'Molls Gap' },
-            'gap of dunloe': { lat: 52.0333, lng: -9.6167, name: 'Gap of Dunloe' },
-            'portmagee': { lat: 51.8833, lng: -10.3833, name: 'Portmagee' },
-            'valentia island': { lat: 51.9333, lng: -10.3500, name: 'Valentia Island' },
-            'skellig michael': { lat: 51.7719, lng: -10.5422, name: 'Skellig Michael' },
-            'kerry cliffs': { lat: 51.8833, lng: -10.4000, name: 'Kerry Cliffs' },
-            'ring of skellig': { lat: 51.8500, lng: -10.3500, name: 'Ring of Skellig' },
-            'staigue fort': { lat: 51.7833, lng: -9.9833, name: 'Staigue Fort' },
-            'derrynane beach': { lat: 51.7500, lng: -10.1167, name: 'Derrynane Beach' },
-            'muckross house': { lat: 52.0167, lng: -9.5167, name: 'Muckross House' },
-            'ross castle': { lat: 52.0333, lng: -9.5333, name: 'Ross Castle' },
-            'torc waterfall': { lat: 52.0000, lng: -9.5500, name: 'Torc Waterfall' },
-            'caherdaniel': { lat: 51.7667, lng: -10.1000, name: 'Caherdaniel' },
-            'ballycarbery castle': { lat: 51.9547, lng: -10.2272, name: 'Ballycarbery Castle' },
-            'daniel o\'connell circle': { lat: 51.7667, lng: -10.1000, name: 'Daniel O\'Connell Circle' },
-            'kells bay': { lat: 51.8167, lng: -10.1167, name: 'Kells Bay' }
-        };
-        
         document.addEventListener('DOMContentLoaded', function() {
             console.log("DOM loaded - starting loadItinerary");
             loadItinerary();
         });
-        
-        // Google Maps initialization callback
-        function initGoogleMaps() {
-            console.log("Google Maps API loaded");
-            if (currentUserData && currentItinerary) {
-                setTimeout(initializeMap, 100);
-            }
-        }
         
         function loadItinerary() {
             console.log("loadItinerary function called");
@@ -809,490 +615,6 @@
             
             populateSummary(currentUserData);
             populateItinerary(currentItinerary);
-            setupDayButtons();
-            
-            // Initialize map if Google Maps is available
-            if (typeof google !== 'undefined') {
-                initializeMap();
-            } else {
-                console.log("Google Maps not loaded yet, will initialize when ready");
-            }
-        }
-        
-        function setupDayButtons() {
-            var duration = parseInt(currentUserData.duration) || 3;
-            console.log("Setting up day buttons for " + duration + " days");
-            
-            // Show day buttons based on duration
-            for (var i = 1; i <= Math.min(duration, 7); i++) {
-                var btn = document.getElementById('day' + i + 'Btn');
-                if (btn) {
-                    btn.style.display = 'inline-block';
-                }
-            }
-        }
-        
-        function initializeMap() {
-            console.log("Initializing Google Maps");
-            
-            try {
-                // Center map on Ring of Kerry area
-                var mapCenter = { lat: 51.9, lng: -9.8 };
-                
-                map = new google.maps.Map(document.getElementById("map"), {
-                    zoom: 10,
-                    center: mapCenter,
-                    mapTypeId: google.maps.MapTypeId.ROADMAP,
-                    styles: [
-                        {
-                            featureType: "poi",
-                            elementType: "labels",
-                            stylers: [{ visibility: "off" }]
-                        }
-                    ]
-                });
-                
-                directionsService = new google.maps.DirectionsService();
-                directionsRenderer = new google.maps.DirectionsRenderer({
-                    suppressMarkers: true,
-                    polylineOptions: {
-                        strokeColor: "#4a7c59",
-                        strokeWeight: 4,
-                        strokeOpacity: 0.8
-                    }
-                });
-                directionsRenderer.setMap(map);
-                
-                // Extract locations from itinerary and add to map
-                extractLocationsFromItinerary();
-                addMarkersToMap();
-                
-                console.log("Map initialized successfully");
-                
-            } catch (error) {
-                console.error("Error initializing map:", error);
-                showMapError();
-            }
-        }
-        
-        function extractLocationsFromItinerary() {
-            console.log("Extracting locations from itinerary");
-            extractedLocations = [];
-            
-            if (!currentItinerary) {
-                // Fallback to basic Ring of Kerry route if no itinerary
-                createBasicRingOfKerryRoute();
-                return;
-            }
-            
-            var dayLocations = {};
-            var duration = parseInt(currentUserData.duration) || 3;
-            
-            // Parse itinerary by days
-            var dayPattern = /day (\d+)[^]*?(?=day \d+|$)/gi;
-            var dayMatches = currentItinerary.match(dayPattern);
-            
-            if (dayMatches && dayMatches.length > 0) {
-                dayMatches.forEach(function(dayText, index) {
-                    var dayNumber = index + 1;
-                    dayLocations[dayNumber] = [];
-                    
-                    // Find locations mentioned in this day in order of appearance
-                    var foundLocations = [];
-                    for (var locationKey in ringOfKerryLocations) {
-                        var position = dayText.toLowerCase().indexOf(locationKey);
-                        if (position !== -1) {
-                            var location = ringOfKerryLocations[locationKey];
-                            foundLocations.push({
-                                name: location.name,
-                                lat: location.lat,
-                                lng: location.lng,
-                                day: dayNumber,
-                                position: position
-                            });
-                        }
-                    }
-                    
-                    // Sort by order of appearance in text
-                    foundLocations.sort(function(a, b) {
-                        return a.position - b.position;
-                    });
-                    
-                    dayLocations[dayNumber] = foundLocations;
-                });
-            } else {
-                // If no day pattern found, create logical Ring of Kerry route
-                createBasicRingOfKerryRoute();
-                return;
-            }
-            
-            // Create logical routes for each day
-            for (var day = 1; day <= duration; day++) {
-                if (dayLocations[day] && dayLocations[day].length > 0) {
-                    // Ensure logical flow - start with previous day's end if available
-                    if (day > 1 && dayLocations[day-1] && dayLocations[day-1].length > 0) {
-                        var previousEnd = dayLocations[day-1][dayLocations[day-1].length - 1];
-                        // Check if current day starts near where previous day ended
-                        var currentStart = dayLocations[day][0];
-                        var distance = calculateDistance(previousEnd.lat, previousEnd.lng, currentStart.lat, currentStart.lng);
-                        
-                        // If too far apart, add connecting location
-                        if (distance > 50) { // 50km threshold
-                            var connectingLocation = findConnectingLocation(previousEnd, currentStart);
-                            if (connectingLocation) {
-                                dayLocations[day].unshift(connectingLocation);
-                            }
-                        }
-                    }
-                    
-                    extractedLocations = extractedLocations.concat(dayLocations[day]);
-                }
-            }
-            
-            // If no locations found, create basic route
-            if (extractedLocations.length === 0) {
-                createBasicRingOfKerryRoute();
-            }
-            
-            console.log("Extracted " + extractedLocations.length + " locations from itinerary");
-        }
-        
-        function createBasicRingOfKerryRoute() {
-            console.log("Creating basic Ring of Kerry route");
-            var duration = parseInt(currentUserData.duration) || 3;
-            
-            // Standard Ring of Kerry routes based on duration
-            var routes = {
-                1: [
-                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 1 },
-                    { name: 'Ladies View', lat: 51.9967, lng: -9.5733, day: 1 },
-                    { name: 'Molls Gap', lat: 51.9333, lng: -9.6333, day: 1 },
-                    { name: 'Kenmare', lat: 51.8833, lng: -9.5833, day: 1 },
-                    { name: 'Sneem', lat: 51.8333, lng: -9.9000, day: 1 },
-                    { name: 'Waterville', lat: 51.8333, lng: -10.1667, day: 1 },
-                    { name: 'Cahersiveen', lat: 51.9489, lng: -10.2225, day: 1 },
-                    { name: 'Killorglin', lat: 52.1167, lng: -9.8000, day: 1 },
-                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 1 }
-                ],
-                2: [
-                    // Day 1: Killarney to Kenmare
-                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 1 },
-                    { name: 'Muckross House', lat: 52.0167, lng: -9.5167, day: 1 },
-                    { name: 'Ladies View', lat: 51.9967, lng: -9.5733, day: 1 },
-                    { name: 'Molls Gap', lat: 51.9333, lng: -9.6333, day: 1 },
-                    { name: 'Kenmare', lat: 51.8833, lng: -9.5833, day: 1 },
-                    
-                    // Day 2: Kenmare around Ring back to Killarney
-                    { name: 'Kenmare', lat: 51.8833, lng: -9.5833, day: 2 },
-                    { name: 'Sneem', lat: 51.8333, lng: -9.9000, day: 2 },
-                    { name: 'Waterville', lat: 51.8333, lng: -10.1667, day: 2 },
-                    { name: 'Cahersiveen', lat: 51.9489, lng: -10.2225, day: 2 },
-                    { name: 'Killorglin', lat: 52.1167, lng: -9.8000, day: 2 },
-                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 2 }
-                ],
-                3: [
-                    // Day 1: Killarney to Kenmare
-                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 1 },
-                    { name: 'Muckross House', lat: 52.0167, lng: -9.5167, day: 1 },
-                    { name: 'Ladies View', lat: 51.9967, lng: -9.5733, day: 1 },
-                    { name: 'Molls Gap', lat: 51.9333, lng: -9.6333, day: 1 },
-                    { name: 'Kenmare', lat: 51.8833, lng: -9.5833, day: 1 },
-                    
-                    // Day 2: Kenmare to Waterville
-                    { name: 'Kenmare', lat: 51.8833, lng: -9.5833, day: 2 },
-                    { name: 'Staigue Fort', lat: 51.7833, lng: -9.9833, day: 2 },
-                    { name: 'Derrynane Beach', lat: 51.7500, lng: -10.1167, day: 2 },
-                    { name: 'Waterville', lat: 51.8333, lng: -10.1667, day: 2 },
-                    
-                    // Day 3: Waterville to Killarney
-                    { name: 'Waterville', lat: 51.8333, lng: -10.1667, day: 3 },
-                    { name: 'Portmagee', lat: 51.8833, lng: -10.3833, day: 3 },
-                    { name: 'Cahersiveen', lat: 51.9489, lng: -10.2225, day: 3 },
-                    { name: 'Killorglin', lat: 52.1167, lng: -9.8000, day: 3 },
-                    { name: 'Killarney', lat: 52.0599, lng: -9.5044, day: 3 }
-                ]
-            };
-            
-            // Use route based on duration, fallback to 3-day route
-            extractedLocations = routes[duration] || routes[3];
-        }
-        
-        function calculateDistance(lat1, lng1, lat2, lng2) {
-            var R = 6371; // Earth's radius in km
-            var dLat = (lat2 - lat1) * Math.PI / 180;
-            var dLng = (lng2 - lng1) * Math.PI / 180;
-            var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                    Math.sin(dLng/2) * Math.sin(dLng/2);
-            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-        
-        function findConnectingLocation(from, to) {
-            // Find a logical connecting point between two locations
-            var midLat = (from.lat + to.lat) / 2;
-            var midLng = (from.lng + to.lng) / 2;
-            
-            // Find closest Ring of Kerry location to midpoint
-            var closestLocation = null;
-            var minDistance = Infinity;
-            
-            for (var key in ringOfKerryLocations) {
-                var location = ringOfKerryLocations[key];
-                var distance = calculateDistance(midLat, midLng, location.lat, location.lng);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestLocation = {
-                        name: location.name,
-                        lat: location.lat,
-                        lng: location.lng,
-                        day: to.day
-                    };
-                }
-            }
-            
-            return closestLocation;
-        }
-        
-        function addMarkersToMap() {
-            console.log("Adding markers to map");
-            
-            if (!map || extractedLocations.length === 0) {
-                console.log("No map or locations to display");
-                return;
-            }
-            
-            // Clear existing markers
-            markers.forEach(function(marker) {
-                marker.setMap(null);
-            });
-            markers = [];
-            
-            // Add markers for extracted locations
-            extractedLocations.forEach(function(location, index) {
-                var colorIndex = (location.day - 1) % routeColors.length;
-                var color = routeColors[colorIndex];
-                
-                var marker = new google.maps.Marker({
-                    position: { lat: location.lat, lng: location.lng },
-                    map: map,
-                    title: location.name,
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 8,
-                        fillColor: color,
-                        fillOpacity: 0.8,
-                        strokeColor: '#ffffff',
-                        strokeWeight: 2
-                    },
-                    day: location.day
-                });
-                
-                // Add info window
-                var infoWindow = new google.maps.InfoWindow({
-                    content: '<div style="padding: 5px;"><strong>' + location.name + '</strong><br>Day ' + location.day + '</div>'
-                });
-                
-                marker.addListener('click', function() {
-                    infoWindow.open(map, marker);
-                });
-                
-                markers.push(marker);
-            });
-            
-            // Show route for all days initially
-            showAllDaysRoute();
-        }
-        
-        function showAllDaysRoute() {
-            console.log("Showing complete tour route");
-            
-            if (!map || extractedLocations.length === 0) return;
-            
-            // Show all markers
-            markers.forEach(function(marker) {
-                marker.setVisible(true);
-            });
-            
-            // Create complete tour route connecting all days
-            var allLocations = [];
-            var duration = parseInt(currentUserData.duration) || 3;
-            
-            for (var day = 1; day <= duration; day++) {
-                var dayLocations = extractedLocations.filter(function(loc) {
-                    return loc.day === day;
-                });
-                
-                if (dayLocations.length > 0) {
-                    allLocations = allLocations.concat(dayLocations);
-                }
-            }
-            
-            if (allLocations.length > 1) {
-                // Remove duplicates (same location on consecutive days)
-                var uniqueLocations = [];
-                for (var i = 0; i < allLocations.length; i++) {
-                    var current = allLocations[i];
-                    var previous = allLocations[i - 1];
-                    
-                    if (!previous || 
-                        calculateDistance(current.lat, current.lng, previous.lat, previous.lng) > 5) {
-                        uniqueLocations.push(current);
-                    }
-                }
-                
-                createRoute(uniqueLocations, '#4a7c59', 'Complete Ring of Kerry Tour');
-            }
-            
-            currentDayFilter = 'all';
-            updateActiveMapButton('All Days');
-        }
-        
-        function showDay(dayNumber) {
-            console.log("Showing day " + dayNumber + " route");
-            
-            if (!map) return;
-            
-            // Hide all markers first
-            markers.forEach(function(marker) {
-                marker.setVisible(false);
-            });
-            
-            // Show only markers for selected day
-            var visibleMarkers = 0;
-            markers.forEach(function(marker) {
-                if (marker.day === dayNumber) {
-                    marker.setVisible(true);
-                    visibleMarkers++;
-                }
-            });
-            
-            // Create route for selected day only
-            var dayLocations = extractedLocations.filter(function(loc) {
-                return loc.day === dayNumber;
-            });
-            
-            if (dayLocations.length > 1) {
-                var routeColor = routeColors[dayNumber - 1] || '#4a7c59';
-                createRoute(dayLocations, routeColor, 'Day ' + dayNumber + ' Route');
-            } else if (dayLocations.length === 1) {
-                // Single location - just center map on it
-                map.setCenter({ lat: dayLocations[0].lat, lng: dayLocations[0].lng });
-                map.setZoom(12);
-            }
-            
-            console.log("Day " + dayNumber + ": showing " + visibleMarkers + " markers and " + dayLocations.length + " route points");
-            
-            currentDayFilter = dayNumber;
-            updateActiveMapButton('Day ' + dayNumber);
-        }
-        
-        function createRoute(locations, color, routeName) {
-            if (!directionsService || !directionsRenderer || locations.length < 2) {
-                console.log("Cannot create route: insufficient data");
-                return;
-            }
-            
-            console.log("Creating route: " + routeName + " with " + locations.length + " locations");
-            
-            var waypoints = locations.map(function(loc) {
-                return { lat: loc.lat, lng: loc.lng };
-            });
-            
-            // Limit waypoints to Google Maps API limits (max 25 waypoints including origin/destination)
-            var maxWaypoints = 23; // 25 total - 2 for origin/destination
-            if (waypoints.length > maxWaypoints + 2) {
-                // Keep first, last, and evenly distributed points in between
-                var step = Math.floor((waypoints.length - 2) / maxWaypoints);
-                var reducedWaypoints = [waypoints[0]];
-                
-                for (var i = step; i < waypoints.length - 1; i += step) {
-                    reducedWaypoints.push(waypoints[i]);
-                }
-                
-                reducedWaypoints.push(waypoints[waypoints.length - 1]);
-                waypoints = reducedWaypoints;
-            }
-            
-            var request = {
-                origin: waypoints[0],
-                destination: waypoints[waypoints.length - 1],
-                waypoints: waypoints.slice(1, -1).map(function(point) {
-                    return { location: point, stopover: true };
-                }),
-                travelMode: google.maps.TravelMode.DRIVING,
-                unitSystem: google.maps.UnitSystem.METRIC,
-                region: 'IE',
-                optimizeWaypoints: false // Keep order as specified
-            };
-            
-            directionsRenderer.setOptions({
-                polylineOptions: {
-                    strokeColor: color,
-                    strokeWeight: 4,
-                    strokeOpacity: 0.8
-                }
-            });
-            
-            directionsService.route(request, function(result, status) {
-                if (status === 'OK') {
-                    directionsRenderer.setDirections(result);
-                    console.log("Route created successfully: " + routeName);
-                    
-                    // Show route info in console for debugging
-                    var route = result.routes[0];
-                    if (route && route.legs) {
-                        var totalDistance = 0;
-                        var totalDuration = 0;
-                        route.legs.forEach(function(leg) {
-                            totalDistance += leg.distance.value;
-                            totalDuration += leg.duration.value;
-                        });
-                        console.log(routeName + " - Distance: " + (totalDistance / 1000).toFixed(1) + "km, Duration: " + Math.round(totalDuration / 60) + " minutes");
-                    }
-                } else {
-                    console.error('Directions request failed for ' + routeName + ' due to ' + status);
-                    
-                    // Fallback: just show markers without route
-                    if (locations.length > 0) {
-                        var bounds = new google.maps.LatLngBounds();
-                        locations.forEach(function(loc) {
-                            bounds.extend({ lat: loc.lat, lng: loc.lng });
-                        });
-                        map.fitBounds(bounds);
-                    }
-                }
-            });
-        }
-        
-        function toggleSatellite() {
-            if (!map) return;
-            
-            isSatelliteView = !isSatelliteView;
-            var mapTypeId = isSatelliteView ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP;
-            map.setMapTypeId(mapTypeId);
-            
-            var btn = document.getElementById('satelliteBtn');
-            if (btn) {
-                btn.textContent = isSatelliteView ? 'Road' : 'Satellite';
-            }
-        }
-        
-        function updateActiveMapButton(activeText) {
-            var buttons = document.querySelectorAll('.map-btn');
-            buttons.forEach(function(btn) {
-                btn.classList.remove('active');
-                if (btn.textContent.trim() === activeText) {
-                    btn.classList.add('active');
-                }
-            });
-        }
-        
-        function showMapError() {
-            var mapElement = document.getElementById('map');
-            if (mapElement) {
-                mapElement.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666; text-align: center;"><div><div style="font-size: 3em; margin-bottom: 15px;">🗺️</div><h3>Map Unavailable</h3><p>Please add a valid Google Maps API key to enable the interactive map.</p></div></div>';
-            }
         }
         
         function showError() {
@@ -1330,7 +652,7 @@
                 specialRequirements.push('<span class="requirement-highlight style">🎯 Travel Style: ' + paceDisplay + '</span>');
             }
             
-            // Display accommodation type preference
+            // UPDATED: Display accommodation type preference
             if (userData.accommodation && userData.accommodation !== 'flexible') {
                 var accommodationDisplay = getAccommodationDisplayName(userData.accommodation);
                 specialRequirements.push('<span class="requirement-highlight accommodation">🏨 Accommodation: ' + accommodationDisplay + '</span>');
@@ -1348,7 +670,7 @@
             summaryElement.innerHTML = summaryHTML;
         }
         
-        // Function to convert accommodation values to display names
+        // NEW: Function to convert accommodation values to display names
         function getAccommodationDisplayName(accommodationType) {
             var displayNames = {
                 'self-catering': 'Self-Catering Properties',
@@ -1372,19 +694,13 @@
             
             var formattedItinerary = itinerary;
             
-            // Remove AI continuation messages that shouldn't be shown to users
-            formattedItinerary = formattedItinerary.replace(/\[Continues with[^[\]]*\]/gi, '');
-            formattedItinerary = formattedItinerary.replace(/\[.*character limit.*\]/gi, '');
-            formattedItinerary = formattedItinerary.replace(/Would you like me to[^?]*\?/gi, '');
-            formattedItinerary = formattedItinerary.replace(/\(Note:[^)]*\)/gi, '');
-            
             // First, convert **bold** to styled strong tags (before adding <br> tags)
             formattedItinerary = formattedItinerary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             
             // Convert "DAY X:" patterns to h2 headers (before <br> conversion)
             formattedItinerary = formattedItinerary.replace(/^(DAY \d+[^\n]*)/gm, '<h2>$1</h2>');
             
-            // Convert "ACCOMMODATION FOR TONIGHT:" patterns to special h3 headers
+            // NEW: Convert "ACCOMMODATION FOR TONIGHT:" patterns to special h3 headers
             formattedItinerary = formattedItinerary.replace(/^(ACCOMMODATION FOR TONIGHT:)/gm, '<h3 style="background: #e8f5e8; color: #2d5a3d; border-left-color: #4a7c59;">🏨 $1</h3>');
             
             // Remove the dashed lines that follow day headers (they're just visual clutter now)
@@ -1396,20 +712,14 @@
             // Convert time patterns like "8:00 AM" etc to h3 headers
             formattedItinerary = formattedItinerary.replace(/^(\d{1,2}:\d{2}\s*[AP]M[^\n]*)/gm, '<h3>🕒 $1</h3>');
             
-            // Style accommodation recommendations within content
+            // NEW: Style accommodation recommendations within content
             formattedItinerary = formattedItinerary.replace(/🏨 \*\*Recommendation \d+:\*\*/g, '<div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-left: 4px solid #4a7c59; border-radius: 8px;"><strong style="color: #2d5a3d; font-size: 1.1em;">🏨 Accommodation Option:</strong>');
             
             // Close accommodation recommendation divs
             formattedItinerary = formattedItinerary.replace(/(\- \*\*Contact:\*\*[^\n]+)/g, '$1</div>');
             
-            // Clean up any remaining incomplete sections
-            formattedItinerary = formattedItinerary.replace(/\[.*?\]/g, ''); // Remove any remaining [bracketed] content
-            
             // Now convert line breaks to HTML
             formattedItinerary = formattedItinerary.replace(/\n/g, '<br>');
-            
-            // Clean up excessive line breaks
-            formattedItinerary = formattedItinerary.replace(/(<br>\s*){3,}/g, '<br><br>');
             
             console.log("Formatted itinerary:", formattedItinerary.substring(0, 500));
             
