@@ -53,209 +53,165 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Enhanced prompt that creates truly personalized, unique itineraries with accommodation focus
-    const prompt = `You are an expert Irish tourism guide creating a completely personalized ${userData.duration}-day Ring of Kerry itinerary. You have carefully analyzed this traveler's specific requirements and will create recommendations that directly address their stated preferences.
+    // UPDATED: More concise prompt to fit within token limits while maintaining quality
+    const prompt = `Create a complete ${userData.duration}-day Ring of Kerry itinerary for ${userData.travelMonth} 2025.
 
-**TRAVELER PROFILE ANALYSIS:**
-- Group: ${userData.groupSize} people
-- Age Range: ${userData.ageRange || 'Mixed ages'}
-- Travel Month: ${userData.travelMonth} 2025
-- Daily Budget: €${userData.budget} per person
-- Primary Interests: ${userData.interests?.join(', ') || 'general sightseeing'}
-- Travel Style: ${userData.pace || 'moderate'} pace
-- Activity Level: ${getActivityDescription(userData.activityLevel)}
-- Transportation: ${userData.transport || 'rental car'}
-- Accommodation Preference: ${userData.accommodation || 'flexible'}
-${userData.dietaryRequirements ? `\n- **CRITICAL DIETARY REQUIREMENTS: "${userData.dietaryRequirements}"** - This MUST be specifically mentioned and addressed in ALL food recommendations throughout the itinerary` : ''}
-${userData.accessibilityNeeds ? `\n- **ESSENTIAL ACCESSIBILITY REQUIREMENTS: "${userData.accessibilityNeeds}"** - Every venue and activity MUST accommodate these specific needs` : ''}
-${userData.specialRequests ? `\n- **IMPORTANT SPECIAL REQUESTS: "${userData.specialRequests}"** - These personal preferences must be woven throughout the experience` : ''}
-${userData.mustSee ? `\n- **MUST-SEE LOCATIONS: "${userData.mustSee}"** - These specific places must be included in the itinerary` : ''}
-${userData.concerns ? `\n- **CONCERNS TO AVOID: "${userData.concerns}"** - Plan carefully around these concerns` : ''}
+**TRAVELER PROFILE:**
+- ${userData.groupSize} people, €${userData.budget}/person/day budget
+- Interests: ${userData.interests?.join(', ') || 'general sightseeing'}
+- Pace: ${userData.pace || 'moderate'}
+- Accommodation: ${userData.accommodation || 'flexible'}
+${userData.dietaryRequirements ? `- DIETARY: ${userData.dietaryRequirements}` : ''}
+${userData.accessibilityNeeds ? `- ACCESSIBILITY: ${userData.accessibilityNeeds}` : ''}
+${userData.specialRequests ? `- SPECIAL REQUESTS: ${userData.specialRequests}` : ''}
 
-**ACCOMMODATION STRATEGY - CRITICAL FOCUS:**
-${getAccommodationStrategy(userData.accommodation, userData.budget, userData.groupSize)}
+**CRITICAL REQUIREMENTS:**
+1. Include 2-3 specific accommodation options for EACH night with exact names, rates, and contact info
+2. Every restaurant must specify how dietary requirements "${userData.dietaryRequirements || 'general'}" are accommodated
+3. All venues must detail accessibility for "${userData.accessibilityNeeds || 'standard access'}"
+4. Stay within €${userData.budget}/day budget per person
+5. Cover ALL ${userData.duration} days completely - no partial itineraries
 
-**MANDATORY ACCOMMODATION REQUIREMENTS FOR EACH NIGHT:**
-1. **Provide 2-3 Specific Accommodation Recommendations per Night/Location**
-2. **For Each Accommodation Include:**
-   - Exact property name and location
-   - Approximate nightly rate for ${userData.groupSize} people
-   - Key amenities and features that match their "${userData.accommodation}" preference
-   - Contact information (phone/website)
-   - Why it suits their specific budget (€${userData.budget}/person/day) and style
-   - How it accommodates any special requirements: ${userData.dietaryRequirements || 'general dining'}, ${userData.accessibilityNeeds || 'standard access'}
-   - Unique features that align with their interests: ${userData.interests?.join(', ') || 'general sightseeing'}
+**FORMAT FOR EACH DAY:**
 
-**MANDATORY PERSONALIZATION BASED ON STATED REQUIREMENTS:**
-
-${generateDetailedPersonalization(userData)}
-
-**CRITICAL DIETARY ACCOMMODATION (if applicable):**
-${generateDietaryStrategy(userData.dietaryRequirements)}
-
-**ESSENTIAL ACCESSIBILITY PLANNING (if applicable):**
-${generateAccessibilityStrategy(userData.accessibilityNeeds)}
-
-**YOUR CUSTOMIZED ITINERARY APPROACH:**
-This itinerary has been specifically designed around your interests in ${userData.interests?.join(' and ') || 'exploring Kerry'}. Every recommendation considers your €${userData.budget}/day budget, ${userData.travelMonth} weather conditions, ${userData.groupSize}-person group dynamics, and ${userData.pace || 'moderate'} pace preference.
-
-${userData.dietaryRequirements ? `\n**DIETARY REQUIREMENT REMINDER:** Every restaurant recommendation MUST specifically explain how "${userData.dietaryRequirements}" will be accommodated, with exact menu options and safety protocols.` : ''}
-
-${userData.accessibilityNeeds ? `\n**ACCESSIBILITY REQUIREMENT REMINDER:** Every venue MUST be verified as suitable for "${userData.accessibilityNeeds}" with specific details about access, facilities, and assistance available.` : ''}
-
-**ENHANCED ITINERARY FORMAT - ACCOMMODATION FOCUS:**
-
-**DAY X: [LOCATION/THEME]**
---------------------------------
+**DAY X: [Location/Theme]**
 
 **ACCOMMODATION FOR TONIGHT:**
-🏨 **Recommendation 1:** [Exact Property Name]
-- **Location:** [Specific address/area]
-- **Rate:** €[X]/night for ${userData.groupSize} people (fits €${userData.budget}/day budget)
-- **Style Match:** Perfect for your "${userData.accommodation}" preference because [specific reasons]
-- **Key Features:** [Amenities that match their interests and requirements]
-- **Contact:** [Phone/website for booking]
-${userData.dietaryRequirements ? `- **Dietary Accommodation:** How they handle "${userData.dietaryRequirements}" for breakfast/meals` : ''}
-${userData.accessibilityNeeds ? `- **Accessibility:** Specific features for "${userData.accessibilityNeeds}"` : ''}
+🏨 **Option 1:** [Exact Name]
+- Rate: €X/night for ${userData.groupSize} people
+- Contact: [phone/website]
+- Features: [why perfect for their needs]
+${userData.dietaryRequirements ? `- Dietary: How they handle "${userData.dietaryRequirements}"` : ''}
+${userData.accessibilityNeeds ? `- Accessibility: Specific features for "${userData.accessibilityNeeds}"` : ''}
 
-🏨 **Recommendation 2:** [Alternative Property Name]
-[Same detailed format]
+🏨 **Option 2:** [Alternative]
+[Same format]
 
-🏨 **Recommendation 3:** [Budget/Premium Alternative]
-[Same detailed format]
+**MORNING (8:00-12:00):**
+[Time] - [Activity with costs and practical details]
 
-**MORNING:**
-[Time] - [Activity with specific costs, accessibility notes, and verification reminders]
+**AFTERNOON (12:00-17:00):**
+[Time] - [Activity with costs and practical details]
 
-**AFTERNOON:**
-[Time] - [Activity with specific costs, accessibility notes, and verification reminders]
+**EVENING (17:00-21:00):**
+[Time] - [Activity with costs and practical details]
 
-**EVENING:**
-[Time] - [Activity with specific costs, accessibility notes, and verification reminders]
+**ESSENTIAL INSTRUCTIONS:**
+- Must be COMPLETE ${userData.duration}-day itinerary
+- Every accommodation recommendation must be specific and real
+- Address exact dietary requirement: "${userData.dietaryRequirements || 'none'}"
+- Address exact accessibility need: "${userData.accessibilityNeeds || 'none'}"
+- Include specific costs within €${userData.budget}/day budget
+- This must be the complete itinerary - do not ask for continuation
 
-**DAILY STRUCTURE (tailored to your specific needs):**
-- **Morning (8:00-12:00):** Activities selected for optimal ${userData.travelMonth} conditions and your interest in ${userData.interests?.[0] || 'sightseeing'}
-- **Afternoon (12:00-17:00):** Core experiences aligned with your specific interests${userData.accessibilityNeeds ? ' and accessibility requirements' : ''}
-- **Evening (17:00-21:00):** Dining and activities suited to your group size${userData.dietaryRequirements ? ' and dietary needs' : ''}
-
-**FOR EACH RECOMMENDED ACTIVITY/RESTAURANT, YOU MUST INCLUDE:**
-- Why this specifically matches your stated interests
-- Exact costs within your €${userData.budget}/day budget
-${userData.dietaryRequirements ? `- SPECIFIC accommodation details for "${userData.dietaryRequirements}" including exact menu options` : '- Menu highlights and local specialties'}
-${userData.accessibilityNeeds ? `- DETAILED accessibility information for "${userData.accessibilityNeeds}" including entrance access, facilities, and assistance` : '- General accessibility information'}
-- Weather backup plans for ${userData.travelMonth}
-- Timing optimized for your interests (especially ${userData.interests?.[0] || 'general exploration'})
-- Parking and practical information
-- Unique local insights you won't find in standard guidebooks
-
-**UNIQUE EXPERIENCES SELECTED FOR YOUR SPECIFIC PROFILE:**
-${generateUniqueExperiences(userData)}
-
-**${userData.travelMonth.toUpperCase()}-SPECIFIC PLANNING:**
-${getMonthSpecificGuidance(userData.travelMonth)}
-
-**BUDGET OPTIMIZATION FOR €${userData.budget}/DAY:**
-${getBudgetStrategy(userData.budget, userData.interests)}
-
-**VERIFICATION REMINDERS:**
-Throughout your itinerary, please remember to verify current opening hours, availability, and accommodation capabilities directly with venues, especially for dietary requirements and accessibility needs.
-
-**CRITICAL INSTRUCTIONS:**
-- EVERY night must include 2-3 specific accommodation options with exact names and details
-- Reference the exact phrases "${userData.dietaryRequirements || ''}" and "${userData.accessibilityNeeds || ''}" when relevant
-- Every food recommendation must explain HOW the dietary requirement will be met
-- Every venue must confirm suitability for the stated accessibility need
-- Show that you've listened by using the traveler's exact words where appropriate
-- Address specific must-see requests: ${userData.mustSee || 'none specified'}
-- Be mindful of stated concerns: ${userData.concerns || 'none specified'}
-
-Create a COMPLETE ${userData.duration}-day itinerary that demonstrates you've listened to and analyzed every stated requirement. Each recommendation should feel personally selected and include specific explanations of how requirements are met.
-
-This must be the COMPLETE itinerary covering all ${userData.duration} days with detailed accommodation options for each night - no follow-up needed.`;
+Create the FULL itinerary now:`;
 
     console.log('Calling Claude API...');
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 4000,
-        messages: [{
-          role: 'user',
-          content: prompt
-        }]
-      })
-    });
+    // RETRY LOGIC: Try up to 2 times if we get truncated responses
+    let itinerary = null;
+    let attempts = 0;
+    const maxAttempts = 2;
 
-    console.log('Claude API response status:', response.status);
+    while (attempts < maxAttempts && !itinerary) {
+      attempts++;
+      console.log(`Attempt ${attempts} of ${maxAttempts}`);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Claude API error response:', errorText);
-      
-      let errorData;
-      try {
-        errorData = JSON.parse(errorText);
-      } catch {
-        errorData = { message: errorText };
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: 8192, // INCREASED: Maximum possible tokens
+          messages: [{
+            role: 'user',
+            content: prompt
+          }]
+        })
+      });
+
+      console.log('Claude API response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Claude API error response:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { message: errorText };
+        }
+
+        // If this was our last attempt, return error
+        if (attempts >= maxAttempts) {
+          return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({
+              error: 'AI service error',
+              message: errorData.error?.message || 'Failed to generate itinerary'
+            })
+          };
+        }
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        continue;
       }
 
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({
-          error: 'AI service error',
-          message: errorData.error?.message || 'Failed to generate itinerary'
-        })
-      };
-    }
+      const result = await response.json();
+      console.log('Claude API successful');
 
-    const result = await response.json();
-    console.log('Claude API successful');
+      if (!result.content || !result.content[0] || !result.content[0].text) {
+        console.error('Unexpected Claude response format:', result);
+        
+        if (attempts >= maxAttempts) {
+          return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({
+              error: 'Unexpected response format',
+              message: 'The AI service returned an unexpected response'
+            })
+          };
+        }
+        continue;
+      }
 
-    if (!result.content || !result.content[0] || !result.content[0].text) {
-      console.error('Unexpected Claude response format:', result);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({
-          error: 'Unexpected response format',
-          message: 'The AI service returned an unexpected response'
-        })
-      };
-    }
+      let rawItinerary = result.content[0].text;
+      console.log(`Raw itinerary length: ${rawItinerary.length} characters`);
 
-    let itinerary = result.content[0].text;
+      // ENHANCED: Comprehensive truncation detection and cleanup
+      rawItinerary = cleanupItinerary(rawItinerary, userData);
 
-    // Post-process the response to remove any "continue" questions
-    itinerary = itinerary.replace(/Would you like me to continue.*?\?/gi, '');
-    itinerary = itinerary.replace(/Shall I continue.*?\?/gi, '');
-    itinerary = itinerary.replace(/Do you want me to.*?\?/gi, '');
-    itinerary = itinerary.replace(/Let me know if you.*?\./gi, '');
-
-    // REMOVED: No longer adding disclaimer here since it's handled by the frontend
-
-    // If the response seems incomplete, add a note
-    if (itinerary.length < 1000 || !itinerary.toLowerCase().includes(`day ${userData.duration}`)) {
-      itinerary += '\n\n*This is your complete itinerary! If you need any modifications or have specific requests, please contact us.*';
+      // ENHANCED: Validate completeness
+      if (isItineraryComplete(rawItinerary, userData)) {
+        itinerary = rawItinerary;
+        console.log('Complete itinerary generated successfully');
+      } else {
+        console.log(`Attempt ${attempts}: Itinerary appears incomplete, retrying...`);
+        if (attempts >= maxAttempts) {
+          // Use what we have but add completion note
+          itinerary = rawItinerary + '\n\n*This itinerary was generated but may be incomplete. Please verify all details and contact venues directly.*';
+        } else {
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
     }
 
     // Store in database for sharing (simplified storage)
     let itineraryId = null;
     try {
-      // Create a simple storage mechanism
       itineraryId = `itinerary_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
       console.log('Generated itinerary ID:', itineraryId);
-      
     } catch (dbError) {
       console.error('Database storage error:', dbError);
-      // Continue without storage - sharing will be limited
     }
 
     return {
@@ -285,12 +241,87 @@ This must be the COMPLETE itinerary covering all ${userData.duration} days with 
   }
 };
 
-// Enhanced accommodation strategy function
+// NEW: Comprehensive cleanup function
+function cleanupItinerary(itinerary, userData) {
+  let cleaned = itinerary;
+
+  // Remove all continuation prompts and questions
+  const continuationPatterns = [
+    /\[I can continue with[^\]]*\]/gi,
+    /\[Would you like me to[^\]]*\]/gi,
+    /\[Should I continue[^\]]*\]/gi,
+    /\[Do you want me to[^\]]*\]/gi,
+    /\[Let me know if[^\]]*\]/gi,
+    /\[I can provide more[^\]]*\]/gi,
+    /Would you like me to continue.*?\?/gi,
+    /Shall I continue.*?\?/gi,
+    /Do you want me to.*?\?/gi,
+    /Should I continue.*?\?/gi,
+    /Let me know if you.*?\./gi,
+    /I can continue with.*?\./gi,
+    /Would you like the complete.*?\?/gi
+  ];
+
+  continuationPatterns.forEach(pattern => {
+    cleaned = cleaned.replace(pattern, '');
+  });
+
+  // Remove trailing incomplete sentences
+  cleaned = cleaned.replace(/\n[^A-Z\d\*\-\n]*$/g, '');
+  
+  // Remove multiple consecutive newlines
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+  
+  // Trim whitespace
+  cleaned = cleaned.trim();
+
+  return cleaned;
+}
+
+// NEW: Function to validate itinerary completeness
+function isItineraryComplete(itinerary, userData) {
+  const expectedDays = parseInt(userData.duration);
+  
+  // Check if all days are present
+  const dayPattern = /DAY \d+/gi;
+  const dayMatches = itinerary.match(dayPattern);
+  
+  if (!dayMatches || dayMatches.length < expectedDays) {
+    console.log(`Missing days: expected ${expectedDays}, found ${dayMatches ? dayMatches.length : 0}`);
+    return false;
+  }
+
+  // Check for accommodation sections
+  const accommodationPattern = /ACCOMMODATION FOR TONIGHT:|🏨.*?Recommendation/gi;
+  const accommodationMatches = itinerary.match(accommodationPattern);
+  
+  if (!accommodationMatches || accommodationMatches.length < expectedDays - 1) {
+    console.log(`Missing accommodations: expected ${expectedDays - 1}, found ${accommodationMatches ? accommodationMatches.length : 0}`);
+    return false;
+  }
+
+  // Check minimum length (should be substantial for multi-day itinerary)
+  const minLength = expectedDays * 800; // Roughly 800 chars per day minimum
+  if (itinerary.length < minLength) {
+    console.log(`Itinerary too short: ${itinerary.length} chars, expected at least ${minLength}`);
+    return false;
+  }
+
+  // Check that the last day is actually completed (not cut off)
+  const lastDayPattern = new RegExp(`DAY ${expectedDays}[\\s\\S]*?EVENING`, 'i');
+  if (!lastDayPattern.test(itinerary)) {
+    console.log('Last day appears incomplete - missing evening section');
+    return false;
+  }
+
+  return true;
+}
+
+// Keep all your existing helper functions below...
 function getAccommodationStrategy(accommodationType, budget, groupSize) {
   const budgetNum = parseInt(budget);
   const groupNum = parseInt(groupSize);
   
-  // Calculate accommodation budget (typically 40-60% of daily budget)
   const accomBudgetPercentage = budgetNum <= 100 ? 0.5 : budgetNum <= 200 ? 0.45 : 0.4;
   const accommodationBudget = Math.round(budgetNum * accomBudgetPercentage * groupNum);
   
@@ -389,7 +420,6 @@ function getAccommodationStrategy(accommodationType, budget, groupSize) {
   }
 }
 
-// Helper function to convert activity level to description
 function getActivityDescription(level) {
   const descriptions = {
     '1': 'Prefer easy walking and minimal physical activity',
@@ -401,68 +431,41 @@ function getActivityDescription(level) {
   return descriptions[level] || 'Moderate activity level';
 }
 
-// Enhanced personalization function
 function generateDetailedPersonalization(userData) {
   let personalizations = [];
   
-  // Group dynamics analysis
   if (parseInt(userData.groupSize) === 1) {
-    personalizations.push("🎯 **Solo Travel Optimization:** Since you're traveling alone, I've included opportunities to connect with locals, solo-friendly dining spots with communal tables, and activities where you might meet fellow travelers. Your itinerary includes reflective moments at scenic spots perfect for solo contemplation.");
+    personalizations.push("🎯 **Solo Travel Optimization:** Since you're traveling alone, I've included opportunities to connect with locals, solo-friendly dining spots with communal tables, and activities where you might meet fellow travelers.");
   } else if (parseInt(userData.groupSize) === 2) {
-    personalizations.push("💑 **Couple-Focused Experience:** As a pair, your itinerary emphasizes romantic viewpoints for private moments, intimate dining experiences, and activities that encourage connection. I've included spots perfect for couple photography and quiet conversations.");
+    personalizations.push("💑 **Couple-Focused Experience:** As a pair, your itinerary emphasizes romantic viewpoints for private moments, intimate dining experiences, and activities that encourage connection.");
   } else {
-    personalizations.push(`👥 **Group Dynamic Consideration:** For your group of ${userData.groupSize}, I've ensured all activities accommodate your party size, selected restaurants that handle group bookings well, and included experiences that work for group dynamics and decision-making.`);
+    personalizations.push(`👥 **Group Dynamic Consideration:** For your group of ${userData.groupSize}, I've ensured all activities accommodate your party size, selected restaurants that handle group bookings well.`);
   }
   
-  // Age range considerations
-  if (userData.ageRange) {
-    if (userData.ageRange.includes('family-kids')) {
-      personalizations.push("👨‍👩‍👧‍👦 **Family with Children Focus:** All activities are child-friendly with shorter walking distances, interactive experiences, and family restaurants with children's menus and facilities.");
-    } else if (userData.ageRange.includes('60s+')) {
-      personalizations.push("🌟 **Mature Traveler Comfort:** Emphasis on comfortable seating, accessible venues, cultural experiences over physical activities, and restaurants with quieter atmospheres.");
-    }
-  }
-  
-  // Interest-based personalization
   if (userData.interests && userData.interests.length > 0) {
-    personalizations.push(`🎨 **Interest-Driven Selections:** Your passion for ${userData.interests.join(' and ')} has shaped every recommendation. Each activity directly relates to these interests, with specific details about why each location is perfect for ${userData.interests[0]} enthusiasts.`);
+    personalizations.push(`🎨 **Interest-Driven Selections:** Your passion for ${userData.interests.join(' and ')} has shaped every recommendation.`);
   }
   
-  // Budget personalization
   const budget = parseInt(userData.budget);
   if (budget <= 75) {
-    personalizations.push("💰 **Budget-Smart Planning:** Your €" + budget + "/day budget has been carefully optimized with insider tips for free experiences, local lunch spots over tourist restaurants, and hidden gems that provide maximum value. I've included specific cost-saving strategies throughout.");
+    personalizations.push("💰 **Budget-Smart Planning:** Your €" + budget + "/day budget has been carefully optimized with insider tips for free experiences and cost-saving strategies.");
   } else if (budget >= 200) {
-    personalizations.push("✨ **Premium Experience Curation:** Your generous €" + budget + "/day budget allows for exceptional experiences. I've included exclusive activities, premium dining, and unique opportunities that most visitors miss, ensuring memorable moments worth the investment.");
+    personalizations.push("✨ **Premium Experience Curation:** Your generous €" + budget + "/day budget allows for exceptional experiences and unique opportunities.");
   }
   
-  // Dietary personalization
   if (userData.dietaryRequirements) {
-    personalizations.push(`🍽️ **Dietary Requirements Priority:** Your specific requirement that "${userData.dietaryRequirements}" is central to every food recommendation. Each restaurant has been specifically chosen for their ability to accommodate this requirement, with detailed information about available options.`);
+    personalizations.push(`🍽️ **Dietary Requirements Priority:** Your specific requirement for "${userData.dietaryRequirements}" is central to every food recommendation.`);
   }
   
-  // Accessibility personalization
   if (userData.accessibilityNeeds) {
-    personalizations.push(`♿ **Accessibility Requirements Priority:** Your specific need for "${userData.accessibilityNeeds}" has been carefully considered for every venue and activity. Each recommendation includes detailed accessibility information and alternatives where needed.`);
+    personalizations.push(`♿ **Accessibility Requirements Priority:** Your specific need for "${userData.accessibilityNeeds}" has been carefully considered for every venue.`);
   }
   
-  // Pace personalization
-  if (userData.pace) {
-    const paceDescriptions = {
-      'relaxed': 'Your preference for a relaxed pace means fewer stops with more time to truly enjoy each location, perfect for soaking in the atmosphere.',
-      'moderate': 'Your moderate pace preference allows for a balanced mix of must-see attractions and leisure time.',
-      'packed': 'Your packed pace preference means we\'ve maximized your itinerary to see as much as possible while maintaining realistic travel times.'
-    };
-    personalizations.push(`⏱️ **Pace Optimization:** ${paceDescriptions[userData.pace] || 'Your travel pace has been carefully considered in the timing and structure of each day.'}`);
-  }
-  
-  // Month-specific personalization
-  personalizations.push(`🌤️ **${userData.travelMonth} Travel Optimization:** Your ${userData.travelMonth} timing has influenced activity scheduling, clothing recommendations, and backup plans. Each day is structured to make the most of ${userData.travelMonth} conditions in Kerry.`);
+  personalizations.push(`🌤️ **${userData.travelMonth} Travel Optimization:** Your ${userData.travelMonth} timing has influenced activity scheduling and planning.`);
   
   return personalizations.join('\n\n');
 }
 
-// Enhanced dietary strategy function
 function generateDietaryStrategy(dietaryRequirements) {
   if (!dietaryRequirements) {
     return "- Diverse dining options will be provided with menu highlights and local specialties featured prominently.";
@@ -472,35 +475,34 @@ function generateDietaryStrategy(dietaryRequirements) {
   let strategies = [];
   
   if (dietary.includes('vegetarian') || dietary.includes('vegan')) {
-    strategies.push("🌱 **Plant-Based Focus:** Every restaurant recommendation includes specific vegetarian/vegan options. Kerry has excellent plant-based dining - I'll highlight local organic farms, vegetarian-friendly pubs, and restaurants known for creative plant-based Irish cuisine.");
+    strategies.push("🌱 **Plant-Based Focus:** Every restaurant recommendation includes specific vegetarian/vegan options with local organic options highlighted.");
   }
   
   if (dietary.includes('gluten-free') || dietary.includes('celiac') || dietary.includes('coeliac')) {
-    strategies.push("🌾 **Gluten-Free Assurance:** All dining recommendations will specify gluten-free options available. I'll note restaurants with dedicated gluten-free menus, cross-contamination awareness, and traditional Irish dishes that are naturally gluten-free.");
+    strategies.push("🌾 **Gluten-Free Assurance:** All dining recommendations specify gluten-free options with cross-contamination awareness noted.");
   }
   
   if (dietary.includes('dairy-free') || dietary.includes('lactose')) {
-    strategies.push("🥛 **Dairy-Free Navigation:** Each restaurant recommendation includes dairy-free alternatives. I'll highlight establishments offering oat/soy milk for coffee, dairy-free Irish butter alternatives, and traditional dishes that are naturally dairy-free.");
+    strategies.push("🥛 **Dairy-Free Navigation:** Each restaurant includes dairy-free alternatives and naturally dairy-free traditional dishes.");
   }
   
   if (dietary.includes('halal')) {
-    strategies.push("☪️ **Halal Dining:** I'll identify halal-certified restaurants and Muslim-friendly dining options. Where halal-specific restaurants aren't available, I'll recommend vegetarian/seafood options and establishments that can accommodate halal requirements.");
+    strategies.push("☪️ **Halal Dining:** Halal-certified restaurants and Muslim-friendly dining options identified.");
   }
   
   if (dietary.includes('kosher')) {
-    strategies.push("✡️ **Kosher Considerations:** I'll focus on kosher-friendly options, vegetarian restaurants, and establishments that can accommodate kosher requirements. Specific guidance on food preparation and ingredient sourcing will be included.");
+    strategies.push("✡️ **Kosher Considerations:** Kosher-friendly options and vegetarian establishments that accommodate kosher requirements.");
   }
   
   if (dietary.includes('pescatarian')) {
-    strategies.push("🐟 **Pescatarian Perfect:** Kerry's coastal location is ideal for pescatarians! I'll emphasize fresh seafood restaurants, vegetarian options, and coastal dining experiences featuring local catch.");
+    strategies.push("🐟 **Pescatarian Perfect:** Kerry's coastal location emphasized with fresh seafood restaurants and vegetarian options.");
   }
   
-  strategies.push("📞 **Verification Recommended:** For each restaurant, I'll provide contact information so you can confirm current dietary accommodation options before visiting.");
+  strategies.push("📞 **Verification Recommended:** Contact information provided for confirming dietary accommodation options.");
   
   return strategies.join('\n');
 }
 
-// Enhanced accessibility strategy function
 function generateAccessibilityStrategy(accessibilityNeeds) {
   if (!accessibilityNeeds) {
     return "- General accessibility information will be provided for venues and activities.";
@@ -510,60 +512,55 @@ function generateAccessibilityStrategy(accessibilityNeeds) {
   let strategies = [];
   
   if (accessibility.includes('wheelchair') || accessibility.includes('mobility')) {
-    strategies.push("♿ **Wheelchair/Mobility Focus:** Every venue recommendation will include specific details about wheelchair access, ramp availability, accessible parking, and restroom facilities. I'll prioritize ground-floor venues and provide detailed access routes.");
+    strategies.push("♿ **Wheelchair/Mobility Focus:** Detailed wheelchair access, ramp availability, accessible parking, and restroom facilities included for every venue.");
   }
   
   if (accessibility.includes('walking') || accessibility.includes('limited mobility')) {
-    strategies.push("🚶 **Limited Walking Accommodation:** All recommendations will minimize walking distances, include seating options, and provide alternatives for physically demanding activities. Driving routes will prioritize close parking to attractions.");
+    strategies.push("🚶 **Limited Walking Accommodation:** Minimized walking distances, seating options, and close parking prioritized.");
   }
   
   if (accessibility.includes('visual') || accessibility.includes('blind') || accessibility.includes('sight')) {
-    strategies.push("👁️ **Visual Accessibility:** I'll focus on tactile and audio experiences, venues with guided assistance, and detailed descriptions of sensory experiences. Audio guide availability will be noted.");
+    strategies.push("👁️ **Visual Accessibility:** Tactile and audio experiences, guided assistance, and sensory descriptions emphasized.");
   }
   
   if (accessibility.includes('hearing') || accessibility.includes('deaf')) {
-    strategies.push("👂 **Hearing Accessibility:** Visual experiences will be prioritized, and venues with written materials or sign language services will be highlighted. Quiet environments suitable for communication will be selected.");
+    strategies.push("👂 **Hearing Accessibility:** Visual experiences prioritized with written materials and sign language services noted.");
   }
   
-  if (accessibility.includes('cognitive') || accessibility.includes('learning')) {
-    strategies.push("🧠 **Cognitive Accessibility:** Simple navigation routes, clear signage venues, and less overwhelming environments will be prioritized. Detailed instructions and quiet spaces will be included.");
-  }
-  
-  strategies.push("📞 **Accessibility Verification:** For each venue, I'll provide contact information to confirm current accessibility features and any assistance available.");
-  strategies.push("🅿️ **Accessible Transportation:** Parking recommendations will prioritize accessible spaces and proximity to entrances.");
+  strategies.push("📞 **Accessibility Verification:** Contact information provided to confirm accessibility features and assistance.");
+  strategies.push("🅿️ **Accessible Transportation:** Accessible parking and proximity to entrances prioritized.");
   
   return strategies.join('\n');
 }
 
-// Function to generate unique experiences based on interests
 function generateUniqueExperiences(userData) {
   let experiences = [];
   
   if (!userData.interests || userData.interests.length === 0) {
-    return "- Curated blend of iconic Kerry highlights with lesser-known local favorites, selected for authentic Irish experiences.";
+    return "- Curated blend of iconic Kerry highlights with lesser-known local favorites.";
   }
   
   userData.interests.forEach(interest => {
     switch(interest.toLowerCase()) {
       case 'photography':
-        experiences.push("📸 **Photography Treasures:** Secret sunrise spots locals use, golden hour timing for each location, hidden waterfalls perfect for long exposures, and dramatic cliff compositions most tourists never find.");
+        experiences.push("📸 **Photography Treasures:** Secret sunrise spots, golden hour timing, hidden waterfalls, and dramatic compositions.");
         break;
       case 'history':
-        experiences.push("🏰 **Historical Deep-Dives:** Private access to archaeological sites, local historians who share untold stories, ancient pathways with minimal foot traffic, and connections to Ireland's broader historical narrative.");
+        experiences.push("🏰 **Historical Deep-Dives:** Archaeological sites, local historians, ancient pathways, and historical connections.");
         break;
       case 'culture':
-        experiences.push("🎵 **Cultural Immersion:** Traditional music sessions in locals-only pubs, Irish language conversations with native speakers, artisan workshops, and family-run businesses preserving old traditions.");
+        experiences.push("🎵 **Cultural Immersion:** Traditional music sessions, Irish language conversations, artisan workshops, and family traditions.");
         break;
       case 'nature':
       case 'hiking':
-        experiences.push("🥾 **Nature's Hidden Gems:** Off-trail waterfalls, wildlife spotting locations known to local naturalists, hidden valleys with unique ecosystems, and seasonal natural phenomena specific to your visit timing.");
+        experiences.push("🥾 **Nature's Hidden Gems:** Off-trail waterfalls, wildlife spotting, hidden valleys, and unique ecosystems.");
         break;
       case 'food':
       case 'cuisine':
-        experiences.push("🍴 **Culinary Adventures:** Farm-to-table experiences with local producers, traditional cooking methods demonstrations, foraged ingredient tastings, and restaurants where locals actually eat.");
+        experiences.push("🍴 **Culinary Adventures:** Farm-to-table experiences, traditional cooking, foraged ingredients, and local producers.");
         break;
       case 'adventure':
-        experiences.push("⚡ **Unique Adventures:** Activities that leverage Kerry's specific geography, seasonal adventure opportunities, local guides with insider access, and experiences that connect you directly with Kerry's wild landscape.");
+        experiences.push("⚡ **Unique Adventures:** Activities leveraging Kerry's geography, seasonal opportunities, and local guides.");
         break;
     }
   });
@@ -571,40 +568,38 @@ function generateUniqueExperiences(userData) {
   return experiences.join('\n');
 }
 
-// Helper function for month-specific guidance
 function getMonthSpecificGuidance(month) {
   const monthGuidance = {
-    'january': "- Winter conditions: Shorter daylight hours (8:30am-4:30pm), possible storms, indoor alternatives essential\n- Pack waterproofs, check road conditions, many outdoor activities may be limited",
-    'february': "- Late winter: Gradually increasing daylight, stormy weather possible, fewer crowds\n- Good time for indoor cultural experiences, cozy pub visits, dramatic storm watching",
-    'march': "- Early spring: Longer days, variable weather, St. Patrick's celebrations possible\n- Pack layers, outdoor activities becoming viable, spring flowers beginning",
-    'april': "- Spring weather: Mild temperatures, longer daylight, Easter crowds possible\n- Good hiking weather developing, gardens beginning to bloom, variable conditions",
-    'may': "- Late spring: Generally pleasant weather, good for outdoor activities, increasing tourist numbers\n- Excellent for hiking and photography, mild temperatures, spring colors peak",
-    'june': "- Early summer: Longest daylight hours approaching, generally good weather, tourist season begins\n- Peak conditions for outdoor activities, warm clothing still needed for evenings",
-    'july': "- Peak summer: Warmest temperatures, maximum daylight (5:30am-9:30pm), busiest tourist period\n- Book accommodations well in advance, expect crowds at popular sites, best weather for all activities",
-    'august': "- Late summer: Warm temperatures continue, still busy tourist season, occasional rain\n- Good for all outdoor activities, book popular restaurants in advance, festival season",
-    'september': "- Early autumn: Mild temperatures, fewer crowds, generally stable weather\n- Excellent shoulder season, good value, beautiful autumn colors beginning",
-    'october': "- Autumn: Cooler temperatures, shorter days, autumn colors, much fewer crowds\n- Good for photography with autumn foliage, pack warm clothes, some attractions may reduce hours",
-    'november': "- Late autumn: Short daylight hours, cooler weather, very few tourists\n- Focus on indoor activities, cozy experiences, dramatic landscapes, pack warm waterproof gear",
-    'december': "- Winter: Shortest days (8:30am-4:30pm), cool weather, Christmas festivities possible\n- Indoor cultural experiences emphasized, festive atmosphere, check attraction opening hours"
+    'january': "- Winter conditions: Shorter daylight (8:30am-4:30pm), storms possible, indoor alternatives essential",
+    'february': "- Late winter: Increasing daylight, stormy weather, fewer crowds, good for indoor experiences",
+    'march': "- Early spring: Longer days, variable weather, St. Patrick's celebrations, spring flowers beginning",
+    'april': "- Spring weather: Mild temperatures, longer daylight, Easter crowds, good hiking conditions",
+    'may': "- Late spring: Pleasant weather, outdoor activities optimal, mild temperatures, spring colors peak",
+    'june': "- Early summer: Longest daylight approaching, good weather, tourist season begins",
+    'july': "- Peak summer: Warmest temperatures, maximum daylight (5:30am-9:30pm), busiest period",
+    'august': "- Late summer: Warm temperatures, busy season, occasional rain, festival season",
+    'september': "- Early autumn: Mild temperatures, fewer crowds, stable weather, excellent shoulder season",
+    'october': "- Autumn: Cooler temperatures, shorter days, autumn colors, fewer crowds",
+    'november': "- Late autumn: Short daylight, cooler weather, few tourists, indoor focus",
+    'december': "- Winter: Shortest days (8:30am-4:30pm), cool weather, Christmas festivities"
   };
   
-  return monthGuidance[month.toLowerCase()] || "- Weather varies: Pack layers and waterproof clothing, check local conditions";
+  return monthGuidance[month.toLowerCase()] || "- Weather varies: Pack layers and waterproof clothing";
 }
 
-// Enhanced budget strategy function
 function getBudgetStrategy(budget, interests) {
   const budgetNum = parseInt(budget);
   let strategies = [];
   
   if (budgetNum <= 75) {
-    strategies.push("💡 **Budget Maximization:** Free heritage sites, picnic ingredients from local markets, happy hour dining, free walking trails, and community events.");
-    strategies.push("🎯 **Value Focus:** Lunch specials over dinner prices, B&B breakfasts to save on one meal, free parking locations, and activities with the highest impact-to-cost ratio.");
+    strategies.push("💡 **Budget Maximization:** Free heritage sites, market picnics, happy hours, free trails, community events.");
+    strategies.push("🎯 **Value Focus:** Lunch specials, B&B breakfasts, free parking, high impact-to-cost activities.");
   } else if (budgetNum <= 150) {
-    strategies.push("⚖️ **Balanced Investment:** Strategic splurges on experiences that align with your interests, balanced with budget-conscious choices for routine meals and activities.");
-    strategies.push("🎨 **Interest Prioritization:** Higher spending on " + (interests?.[0] || 'key') + " activities, economical choices for secondary experiences.");
+    strategies.push("⚖️ **Balanced Investment:** Strategic splurges on interest-aligned experiences, budget-conscious routine choices.");
+    strategies.push("🎨 **Interest Prioritization:** Higher spending on " + (interests?.[0] || 'key') + " activities.");
   } else {
-    strategies.push("✨ **Premium Curation:** Exclusive experiences, private guides for specialized interests, fine dining showcasing local ingredients, and unique accommodations.");
-    strategies.push("🏆 **Memorable Moments:** Investment in once-in-a-lifetime Kerry experiences that most travelers never access due to cost constraints.");
+    strategies.push("✨ **Premium Curation:** Exclusive experiences, private guides, fine dining, unique accommodations.");
+    strategies.push("🏆 **Memorable Moments:** Investment in once-in-a-lifetime Kerry experiences.");
   }
   
   return strategies.join('\n');
