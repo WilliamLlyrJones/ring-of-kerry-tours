@@ -53,58 +53,89 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // UPDATED: More concise prompt to fit within token limits while maintaining quality
-    const prompt = `Create a complete ${userData.duration}-day Ring of Kerry itinerary for ${userData.travelMonth} 2025.
+    // BALANCED PROMPT: Comprehensive but optimized for 8192 token output
+    const prompt = `You are an expert Irish tourism guide creating a completely personalized ${userData.duration}-day Ring of Kerry itinerary. This must be the COMPLETE itinerary covering all ${userData.duration} days.
 
 **TRAVELER PROFILE:**
-- ${userData.groupSize} people, €${userData.budget}/person/day budget
-- Interests: ${userData.interests?.join(', ') || 'general sightseeing'}
-- Pace: ${userData.pace || 'moderate'}
-- Accommodation: ${userData.accommodation || 'flexible'}
-${userData.dietaryRequirements ? `- DIETARY: ${userData.dietaryRequirements}` : ''}
-${userData.accessibilityNeeds ? `- ACCESSIBILITY: ${userData.accessibilityNeeds}` : ''}
-${userData.specialRequests ? `- SPECIAL REQUESTS: ${userData.specialRequests}` : ''}
+- Group: ${userData.groupSize} people
+- Age Range: ${userData.ageRange || 'Mixed ages'}
+- Travel Month: ${userData.travelMonth} 2025
+- Daily Budget: €${userData.budget} per person
+- Primary Interests: ${userData.interests?.join(', ') || 'general sightseeing'}
+- Travel Style: ${userData.pace || 'moderate'} pace
+- Activity Level: ${getActivityDescription(userData.activityLevel)}
+- Transportation: ${userData.transport || 'rental car'}
+- Accommodation Preference: ${userData.accommodation || 'flexible'}
+${userData.dietaryRequirements ? `\n- **CRITICAL DIETARY: "${userData.dietaryRequirements}"** - Must be addressed in ALL food recommendations` : ''}
+${userData.accessibilityNeeds ? `\n- **ESSENTIAL ACCESSIBILITY: "${userData.accessibilityNeeds}"** - Every venue must accommodate this` : ''}
+${userData.specialRequests ? `\n- **SPECIAL REQUESTS: "${userData.specialRequests}"** - Incorporate throughout` : ''}
+${userData.mustSee ? `\n- **MUST-SEE: "${userData.mustSee}"** - Must be included` : ''}
+${userData.concerns ? `\n- **CONCERNS TO AVOID: "${userData.concerns}"** - Plan around these` : ''}
 
-**CRITICAL REQUIREMENTS:**
-1. Include 2-3 specific accommodation options for EACH night with exact names, rates, and contact info
-2. Every restaurant must specify how dietary requirements "${userData.dietaryRequirements || 'general'}" are accommodated
-3. All venues must detail accessibility for "${userData.accessibilityNeeds || 'standard access'}"
-4. Stay within €${userData.budget}/day budget per person
-5. Cover ALL ${userData.duration} days completely - no partial itineraries
+**ACCOMMODATION STRATEGY:**
+${getAccommodationStrategy(userData.accommodation, userData.budget, userData.groupSize)}
 
-**FORMAT FOR EACH DAY:**
+**MANDATORY REQUIREMENTS:**
+1. **Provide 2-3 Specific Accommodation Options per Night**
+2. **Each Accommodation Must Include:**
+   - Exact property name and location
+   - Approximate rate for ${userData.groupSize} people
+   - Contact information (phone/website)
+   - Why it suits ${userData.accommodation} preference and €${userData.budget} budget
+   - How it accommodates: ${userData.dietaryRequirements || 'general dining'}, ${userData.accessibilityNeeds || 'standard access'}
 
-**DAY X: [Location/Theme]**
+**PERSONALIZATION BASED ON YOUR REQUIREMENTS:**
+${generateDetailedPersonalization(userData)}
+
+**DIETARY STRATEGY:**
+${generateDietaryStrategy(userData.dietaryRequirements)}
+
+**ACCESSIBILITY PLANNING:**
+${generateAccessibilityStrategy(userData.accessibilityNeeds)}
+
+**${userData.travelMonth.toUpperCase()} OPTIMIZATION:**
+${getMonthSpecificGuidance(userData.travelMonth)}
+
+**BUDGET STRATEGY FOR €${userData.budget}/DAY:**
+${getBudgetStrategy(userData.budget, userData.interests)}
+
+**ITINERARY FORMAT:**
+
+**DAY X: [LOCATION/THEME]**
+--------------------------------
 
 **ACCOMMODATION FOR TONIGHT:**
-🏨 **Option 1:** [Exact Name]
-- Rate: €X/night for ${userData.groupSize} people
-- Contact: [phone/website]
-- Features: [why perfect for their needs]
-${userData.dietaryRequirements ? `- Dietary: How they handle "${userData.dietaryRequirements}"` : ''}
-${userData.accessibilityNeeds ? `- Accessibility: Specific features for "${userData.accessibilityNeeds}"` : ''}
+🏨 **Recommendation 1:** [Exact Property Name]
+- **Location:** [Specific address/area]
+- **Rate:** €[X]/night for ${userData.groupSize} people
+- **Style Match:** Perfect for "${userData.accommodation}" preference because [reasons]
+- **Contact:** [Phone/website]
+${userData.dietaryRequirements ? `- **Dietary:** How they handle "${userData.dietaryRequirements}"` : ''}
+${userData.accessibilityNeeds ? `- **Accessibility:** Features for "${userData.accessibilityNeeds}"` : ''}
 
-🏨 **Option 2:** [Alternative]
-[Same format]
+🏨 **Recommendation 2:** [Alternative Property]
+[Same detailed format]
 
 **MORNING (8:00-12:00):**
-[Time] - [Activity with costs and practical details]
+[Time] - [Activity with costs, accessibility, dietary notes]
 
 **AFTERNOON (12:00-17:00):**
-[Time] - [Activity with costs and practical details]
+[Time] - [Activity with costs, accessibility, dietary notes]
 
 **EVENING (17:00-21:00):**
-[Time] - [Activity with costs and practical details]
+[Time] - [Activity with costs, accessibility, dietary notes]
 
-**ESSENTIAL INSTRUCTIONS:**
-- Must be COMPLETE ${userData.duration}-day itinerary
-- Every accommodation recommendation must be specific and real
-- Address exact dietary requirement: "${userData.dietaryRequirements || 'none'}"
-- Address exact accessibility need: "${userData.accessibilityNeeds || 'none'}"
+**UNIQUE EXPERIENCES FOR YOUR INTERESTS:**
+${generateUniqueExperiences(userData)}
+
+**CRITICAL INSTRUCTIONS:**
+- COMPLETE ${userData.duration}-day itinerary required
+- Every recommendation must address "${userData.dietaryRequirements || 'general'}" and "${userData.accessibilityNeeds || 'standard'}"
 - Include specific costs within €${userData.budget}/day budget
-- This must be the complete itinerary - do not ask for continuation
+- Reference exact phrases from traveler requirements
+- No follow-up needed - this is the complete itinerary
 
-Create the FULL itinerary now:`;
+Create the FULL ${userData.duration}-day itinerary now:`;
 
     console.log('Calling Claude API...');
 
@@ -122,11 +153,13 @@ Create the FULL itinerary now:`;
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': process.env.ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01'
+          'anthropic-version': '2023-06-01',
+          // CRITICAL: Add the beta header for 8192 token output
+          'anthropic-beta': 'max-tokens-3-5-sonnet-2024-07-15'
         },
         body: JSON.stringify({
           model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 8192, // INCREASED: Maximum possible tokens
+          max_tokens: 8192, // Now properly supported with beta header
           messages: [{
             role: 'user',
             content: prompt
@@ -147,7 +180,6 @@ Create the FULL itinerary now:`;
           errorData = { message: errorText };
         }
 
-        // If this was our last attempt, return error
         if (attempts >= maxAttempts) {
           return {
             statusCode: 500,
@@ -159,13 +191,13 @@ Create the FULL itinerary now:`;
           };
         }
         
-        // Wait before retry
         await new Promise(resolve => setTimeout(resolve, 1000));
         continue;
       }
 
       const result = await response.json();
       console.log('Claude API successful');
+      console.log('Usage stats:', result.usage);
 
       if (!result.content || !result.content[0] || !result.content[0].text) {
         console.error('Unexpected Claude response format:', result);
@@ -185,11 +217,12 @@ Create the FULL itinerary now:`;
 
       let rawItinerary = result.content[0].text;
       console.log(`Raw itinerary length: ${rawItinerary.length} characters`);
+      console.log(`Output tokens used: ${result.usage?.output_tokens || 'unknown'}`);
 
-      // ENHANCED: Comprehensive truncation detection and cleanup
+      // Enhanced cleanup
       rawItinerary = cleanupItinerary(rawItinerary, userData);
 
-      // ENHANCED: Validate completeness
+      // Validate completeness
       if (isItineraryComplete(rawItinerary, userData)) {
         itinerary = rawItinerary;
         console.log('Complete itinerary generated successfully');
@@ -199,7 +232,6 @@ Create the FULL itinerary now:`;
           // Use what we have but add completion note
           itinerary = rawItinerary + '\n\n*This itinerary was generated but may be incomplete. Please verify all details and contact venues directly.*';
         } else {
-          // Wait before retry
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
@@ -208,10 +240,14 @@ Create the FULL itinerary now:`;
     // Store in database for sharing (simplified storage)
     let itineraryId = null;
     try {
+      // Create a simple storage mechanism
       itineraryId = `itinerary_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
       console.log('Generated itinerary ID:', itineraryId);
+      
     } catch (dbError) {
       console.error('Database storage error:', dbError);
+      // Continue without storage - sharing will be limited
     }
 
     return {
@@ -241,7 +277,7 @@ Create the FULL itinerary now:`;
   }
 };
 
-// NEW: Comprehensive cleanup function
+// Comprehensive cleanup function
 function cleanupItinerary(itinerary, userData) {
   let cleaned = itinerary;
 
@@ -259,7 +295,9 @@ function cleanupItinerary(itinerary, userData) {
     /Should I continue.*?\?/gi,
     /Let me know if you.*?\./gi,
     /I can continue with.*?\./gi,
-    /Would you like the complete.*?\?/gi
+    /Would you like the complete.*?\?/gi,
+    /I'll continue with.*?\./gi,
+    /This continues with.*?\./gi
   ];
 
   continuationPatterns.forEach(pattern => {
@@ -278,7 +316,7 @@ function cleanupItinerary(itinerary, userData) {
   return cleaned;
 }
 
-// NEW: Function to validate itinerary completeness
+// Function to validate itinerary completeness
 function isItineraryComplete(itinerary, userData) {
   const expectedDays = parseInt(userData.duration);
   
@@ -301,7 +339,7 @@ function isItineraryComplete(itinerary, userData) {
   }
 
   // Check minimum length (should be substantial for multi-day itinerary)
-  const minLength = expectedDays * 800; // Roughly 800 chars per day minimum
+  const minLength = expectedDays * 1000; // Roughly 1000 chars per day minimum
   if (itinerary.length < minLength) {
     console.log(`Itinerary too short: ${itinerary.length} chars, expected at least ${minLength}`);
     return false;
@@ -317,11 +355,12 @@ function isItineraryComplete(itinerary, userData) {
   return true;
 }
 
-// Keep all your existing helper functions below...
+// Enhanced accommodation strategy function
 function getAccommodationStrategy(accommodationType, budget, groupSize) {
   const budgetNum = parseInt(budget);
   const groupNum = parseInt(groupSize);
   
+  // Calculate accommodation budget (typically 40-60% of daily budget)
   const accomBudgetPercentage = budgetNum <= 100 ? 0.5 : budgetNum <= 200 ? 0.45 : 0.4;
   const accommodationBudget = Math.round(budgetNum * accomBudgetPercentage * groupNum);
   
@@ -330,26 +369,22 @@ function getAccommodationStrategy(accommodationType, budget, groupSize) {
     case 'holiday-homes':
       if (budgetNum < 100) {
         return `🏠 **Self-Catering Budget Strategy (€${accommodationBudget}/night total):**
-        - Target holiday homes, apartments, and vacation rentals €60-90/night for ${groupNum} people
-        - Focus on properties with full kitchens, parking, and Wi-Fi
-        - Include Airbnb, local rental agencies, and holiday home specialists
-        - Emphasize cost savings from cooking meals vs dining out
-        - Highlight grocery stores and markets near accommodations
-        - Look for properties with washing machines and practical amenities`;
+        - Target holiday homes, apartments, vacation rentals €60-90/night for ${groupNum} people
+        - Focus on properties with full kitchens, parking, Wi-Fi
+        - Include Airbnb, local rental agencies, holiday home specialists
+        - Emphasize cost savings from cooking vs dining out
+        - Highlight grocery stores and markets near accommodations`;
       } else if (budgetNum < 200) {
         return `🏠 **Self-Catering Mid-Range Strategy (€${accommodationBudget}/night total):**
         - Premium holiday homes and well-equipped apartments €120-180/night for ${groupNum} people
-        - Modern amenities: dishwashers, quality appliances, good Wi-Fi, parking
-        - Mix of rural retreats with character and convenient town center locations
-        - Include properties with outdoor spaces, fireplaces, or scenic views
-        - Highlight nearby specialty food shops, farmers markets, and gourmet stores`;
+        - Modern amenities: dishwashers, quality appliances, Wi-Fi, parking
+        - Mix of rural retreats and convenient town center locations
+        - Include properties with outdoor spaces, fireplaces, scenic views`;
       } else {
         return `🏠 **Self-Catering Luxury Strategy (€${accommodationBudget}/night total):**
         - Luxury holiday homes, premium cottages, designer apartments €200+/night for ${groupNum} people
         - Premium features: hot tubs, fireplaces, exceptional views, unique character
-        - Historic properties, architect-designed homes, exceptional locations
-        - Include concierge services, grocery delivery, potential chef services
-        - Focus on unique properties that create memorable experiences`;
+        - Historic properties, architect-designed homes, exceptional locations`;
       }
     
     case 'bed-breakfast':
@@ -359,22 +394,17 @@ function getAccommodationStrategy(accommodationType, budget, groupSize) {
         - Traditional Irish B&Bs €50-75 per person including Irish breakfast
         - Family-run establishments with authentic hospitality and local knowledge
         - Emphasis on hearty breakfasts that reduce lunch costs
-        - Include B&Bs with parking, central locations, and good reviews
-        - Focus on value for money with genuine Irish welcome`;
+        - Include B&Bs with parking, central locations, good reviews`;
       } else if (budgetNum < 200) {
         return `🛏️ **B&B Mid-Range Strategy (€${Math.round(accommodationBudget/groupNum)}/person/night):**
         - Superior B&Bs and boutique guesthouses €85-130 per person including breakfast
         - En-suite bathrooms, quality furnishings, some with evening meals available
-        - Award-winning establishments known for excellent hospitality
-        - Include B&Bs with unique character, gardens, or special locations
-        - May offer packed lunches, local tours, or concierge services`;
+        - Award-winning establishments known for excellent hospitality`;
       } else {
         return `🛏️ **B&B Luxury Strategy (€${Math.round(accommodationBudget/groupNum)}/person/night):**
         - Luxury B&Bs, manor houses, country estates €150+ per person including gourmet breakfast
         - Historic properties, exceptional locations, premium amenities
-        - May include spa services, fine dining, concierge assistance
-        - Focus on unique experiences: castle stays, historic homes, award-winning properties
-        - Emphasis on exceptional hospitality and memorable experiences`;
+        - May include spa services, fine dining, concierge assistance`;
       }
     
     case '3-4-star-hotels':
@@ -383,23 +413,16 @@ function getAccommodationStrategy(accommodationType, budget, groupSize) {
         return `🏨 **3-4 Star Hotel Budget Strategy (€${accommodationBudget}/night for ${groupNum} people):**
         - Quality 3-star hotels and well-located properties €100-140/night total
         - Standard amenities: restaurant, bar, Wi-Fi, parking included
-        - Focus on town center locations for walking convenience
-        - Include both hotel chains and independent properties with character
-        - Breakfast options available, family-friendly facilities`;
+        - Focus on town center locations for walking convenience`;
       } else if (budgetNum < 250) {
         return `🏨 **3-4 Star Hotel Mid-Range Strategy (€${accommodationBudget}/night for ${groupNum} people):**
         - Superior 4-star hotels €160-240/night total
         - Enhanced amenities: spa facilities, quality restaurants, room service
-        - Prime locations with views, historic significance, or unique character
-        - Include boutique hotels and established brands with excellent service
-        - Focus on comfort, convenience, and memorable stays`;
+        - Prime locations with views, historic significance, unique character`;
       } else {
         return `🏨 **3-4 Star Hotel Premium Strategy (€${accommodationBudget}/night for ${groupNum} people):**
         - Premium 4-star and boutique hotels €250+/night total
-        - Luxury amenities: spa, fine dining, concierge services, premium locations
-        - Historic hotels, unique properties, exceptional service levels
-        - Include properties with special character or award recognition
-        - Focus on creating exceptional accommodation experiences`;
+        - Luxury amenities: spa, fine dining, concierge services, premium locations`;
       }
     
     case '5-star-luxury':
@@ -407,19 +430,16 @@ function getAccommodationStrategy(accommodationType, budget, groupSize) {
       return `🌟 **5-Star Luxury Strategy (€${accommodationBudget}/night for ${groupNum} people):**
       - Luxury 5-star hotels, castle accommodations, resort properties €350+/night total
       - World-class amenities: multiple restaurants, spas, golf courses, concierge
-      - Historic castles, manor houses, award-winning luxury properties
-      - Include Michelin-starred dining, exclusive experiences, premium service
-      - Focus on creating unforgettable luxury experiences unique to Kerry
-      - May include helicopter transfers, private tours, exclusive access to attractions`;
+      - Historic castles, manor houses, award-winning luxury properties`;
     
     default:
       return `🏨 **Flexible Accommodation Strategy (€${accommodationBudget}/night for ${groupNum} people):**
       - Mix of B&Bs and 3-star hotels based on location and availability
-      - Focus on quality, location, and value for money within budget
-      - Include variety of accommodation types for comparison and flexibility`;
+      - Focus on quality, location, and value within budget`;
   }
 }
 
+// Helper function to convert activity level to description
 function getActivityDescription(level) {
   const descriptions = {
     '1': 'Prefer easy walking and minimal physical activity',
@@ -431,59 +451,57 @@ function getActivityDescription(level) {
   return descriptions[level] || 'Moderate activity level';
 }
 
+// Enhanced personalization function
 function generateDetailedPersonalization(userData) {
   let personalizations = [];
   
+  // Group dynamics analysis
   if (parseInt(userData.groupSize) === 1) {
-    personalizations.push("🎯 **Solo Travel Optimization:** Since you're traveling alone, I've included opportunities to connect with locals, solo-friendly dining spots with communal tables, and activities where you might meet fellow travelers.");
+    personalizations.push("🎯 **Solo Travel:** Opportunities to connect with locals, solo-friendly dining, activities to meet fellow travelers.");
   } else if (parseInt(userData.groupSize) === 2) {
-    personalizations.push("💑 **Couple-Focused Experience:** As a pair, your itinerary emphasizes romantic viewpoints for private moments, intimate dining experiences, and activities that encourage connection.");
+    personalizations.push("💑 **Couple Focus:** Romantic viewpoints, intimate dining, activities that encourage connection.");
   } else {
-    personalizations.push(`👥 **Group Dynamic Consideration:** For your group of ${userData.groupSize}, I've ensured all activities accommodate your party size, selected restaurants that handle group bookings well.`);
+    personalizations.push(`👥 **Group Dynamic:** All activities accommodate ${userData.groupSize} people, group-friendly restaurants and experiences.`);
   }
   
+  // Interest-based personalization
   if (userData.interests && userData.interests.length > 0) {
-    personalizations.push(`🎨 **Interest-Driven Selections:** Your passion for ${userData.interests.join(' and ')} has shaped every recommendation.`);
+    personalizations.push(`🎨 **Interest-Driven:** Your passion for ${userData.interests.join(' and ')} shapes every recommendation.`);
   }
   
+  // Budget personalization
   const budget = parseInt(userData.budget);
   if (budget <= 75) {
-    personalizations.push("💰 **Budget-Smart Planning:** Your €" + budget + "/day budget has been carefully optimized with insider tips for free experiences and cost-saving strategies.");
+    personalizations.push("💰 **Budget-Smart:** €" + budget + "/day optimized with insider tips, free experiences, cost-saving strategies.");
   } else if (budget >= 200) {
-    personalizations.push("✨ **Premium Experience Curation:** Your generous €" + budget + "/day budget allows for exceptional experiences and unique opportunities.");
+    personalizations.push("✨ **Premium Curation:** €" + budget + "/day allows exceptional experiences and unique opportunities.");
   }
   
-  if (userData.dietaryRequirements) {
-    personalizations.push(`🍽️ **Dietary Requirements Priority:** Your specific requirement for "${userData.dietaryRequirements}" is central to every food recommendation.`);
-  }
+  // Month-specific personalization
+  personalizations.push(`🌤️ **${userData.travelMonth} Optimization:** Timing influences activity scheduling and ${userData.travelMonth} conditions.`);
   
-  if (userData.accessibilityNeeds) {
-    personalizations.push(`♿ **Accessibility Requirements Priority:** Your specific need for "${userData.accessibilityNeeds}" has been carefully considered for every venue.`);
-  }
-  
-  personalizations.push(`🌤️ **${userData.travelMonth} Travel Optimization:** Your ${userData.travelMonth} timing has influenced activity scheduling and planning.`);
-  
-  return personalizations.join('\n\n');
+  return personalizations.join('\n');
 }
 
+// Enhanced dietary strategy function
 function generateDietaryStrategy(dietaryRequirements) {
   if (!dietaryRequirements) {
-    return "- Diverse dining options will be provided with menu highlights and local specialties featured prominently.";
+    return "- Diverse dining options with menu highlights and local specialties.";
   }
   
   const dietary = dietaryRequirements.toLowerCase();
   let strategies = [];
   
   if (dietary.includes('vegetarian') || dietary.includes('vegan')) {
-    strategies.push("🌱 **Plant-Based Focus:** Every restaurant recommendation includes specific vegetarian/vegan options with local organic options highlighted.");
+    strategies.push("🌱 **Plant-Based Focus:** Every restaurant includes specific vegetarian/vegan options with local organic highlights.");
   }
   
   if (dietary.includes('gluten-free') || dietary.includes('celiac') || dietary.includes('coeliac')) {
-    strategies.push("🌾 **Gluten-Free Assurance:** All dining recommendations specify gluten-free options with cross-contamination awareness noted.");
+    strategies.push("🌾 **Gluten-Free Assurance:** All dining recommendations specify gluten-free options and cross-contamination awareness.");
   }
   
   if (dietary.includes('dairy-free') || dietary.includes('lactose')) {
-    strategies.push("🥛 **Dairy-Free Navigation:** Each restaurant includes dairy-free alternatives and naturally dairy-free traditional dishes.");
+    strategies.push("🥛 **Dairy-Free Navigation:** Each restaurant includes dairy-free alternatives and naturally dairy-free dishes.");
   }
   
   if (dietary.includes('halal')) {
@@ -491,48 +509,50 @@ function generateDietaryStrategy(dietaryRequirements) {
   }
   
   if (dietary.includes('kosher')) {
-    strategies.push("✡️ **Kosher Considerations:** Kosher-friendly options and vegetarian establishments that accommodate kosher requirements.");
+    strategies.push("✡️ **Kosher Considerations:** Kosher-friendly options and vegetarian establishments accommodating kosher requirements.");
   }
   
   if (dietary.includes('pescatarian')) {
     strategies.push("🐟 **Pescatarian Perfect:** Kerry's coastal location emphasized with fresh seafood restaurants and vegetarian options.");
   }
   
-  strategies.push("📞 **Verification Recommended:** Contact information provided for confirming dietary accommodation options.");
+  strategies.push("📞 **Verification:** Contact information provided for confirming dietary accommodation options.");
   
   return strategies.join('\n');
 }
 
+// Enhanced accessibility strategy function
 function generateAccessibilityStrategy(accessibilityNeeds) {
   if (!accessibilityNeeds) {
-    return "- General accessibility information will be provided for venues and activities.";
+    return "- General accessibility information provided for venues and activities.";
   }
   
   const accessibility = accessibilityNeeds.toLowerCase();
   let strategies = [];
   
   if (accessibility.includes('wheelchair') || accessibility.includes('mobility')) {
-    strategies.push("♿ **Wheelchair/Mobility Focus:** Detailed wheelchair access, ramp availability, accessible parking, and restroom facilities included for every venue.");
+    strategies.push("♿ **Wheelchair/Mobility:** Detailed wheelchair access, ramp availability, accessible parking, restroom facilities for every venue.");
   }
   
   if (accessibility.includes('walking') || accessibility.includes('limited mobility')) {
-    strategies.push("🚶 **Limited Walking Accommodation:** Minimized walking distances, seating options, and close parking prioritized.");
+    strategies.push("🚶 **Limited Walking:** Minimized walking distances, seating options, close parking prioritized.");
   }
   
   if (accessibility.includes('visual') || accessibility.includes('blind') || accessibility.includes('sight')) {
-    strategies.push("👁️ **Visual Accessibility:** Tactile and audio experiences, guided assistance, and sensory descriptions emphasized.");
+    strategies.push("👁️ **Visual Accessibility:** Tactile and audio experiences, guided assistance, sensory descriptions emphasized.");
   }
   
   if (accessibility.includes('hearing') || accessibility.includes('deaf')) {
     strategies.push("👂 **Hearing Accessibility:** Visual experiences prioritized with written materials and sign language services noted.");
   }
   
-  strategies.push("📞 **Accessibility Verification:** Contact information provided to confirm accessibility features and assistance.");
+  strategies.push("📞 **Accessibility Verification:** Contact information to confirm accessibility features and assistance.");
   strategies.push("🅿️ **Accessible Transportation:** Accessible parking and proximity to entrances prioritized.");
   
   return strategies.join('\n');
 }
 
+// Function to generate unique experiences based on interests
 function generateUniqueExperiences(userData) {
   let experiences = [];
   
@@ -543,24 +563,24 @@ function generateUniqueExperiences(userData) {
   userData.interests.forEach(interest => {
     switch(interest.toLowerCase()) {
       case 'photography':
-        experiences.push("📸 **Photography Treasures:** Secret sunrise spots, golden hour timing, hidden waterfalls, and dramatic compositions.");
+        experiences.push("📸 **Photography:** Secret sunrise spots, golden hour timing, hidden waterfalls, dramatic compositions.");
         break;
       case 'history':
-        experiences.push("🏰 **Historical Deep-Dives:** Archaeological sites, local historians, ancient pathways, and historical connections.");
+        experiences.push("🏰 **Historical:** Archaeological sites, local historians, ancient pathways, historical connections.");
         break;
       case 'culture':
-        experiences.push("🎵 **Cultural Immersion:** Traditional music sessions, Irish language conversations, artisan workshops, and family traditions.");
+        experiences.push("🎵 **Cultural:** Traditional music sessions, Irish language conversations, artisan workshops, family traditions.");
         break;
       case 'nature':
       case 'hiking':
-        experiences.push("🥾 **Nature's Hidden Gems:** Off-trail waterfalls, wildlife spotting, hidden valleys, and unique ecosystems.");
+        experiences.push("🥾 **Nature:** Off-trail waterfalls, wildlife spotting, hidden valleys, unique ecosystems.");
         break;
       case 'food':
       case 'cuisine':
-        experiences.push("🍴 **Culinary Adventures:** Farm-to-table experiences, traditional cooking, foraged ingredients, and local producers.");
+        experiences.push("🍴 **Culinary:** Farm-to-table experiences, traditional cooking, foraged ingredients, local producers.");
         break;
       case 'adventure':
-        experiences.push("⚡ **Unique Adventures:** Activities leveraging Kerry's geography, seasonal opportunities, and local guides.");
+        experiences.push("⚡ **Adventure:** Activities leveraging Kerry's geography, seasonal opportunities, local guides.");
         break;
     }
   });
@@ -568,13 +588,14 @@ function generateUniqueExperiences(userData) {
   return experiences.join('\n');
 }
 
+// Helper function for month-specific guidance
 function getMonthSpecificGuidance(month) {
   const monthGuidance = {
-    'january': "- Winter conditions: Shorter daylight (8:30am-4:30pm), storms possible, indoor alternatives essential",
-    'february': "- Late winter: Increasing daylight, stormy weather, fewer crowds, good for indoor experiences",
-    'march': "- Early spring: Longer days, variable weather, St. Patrick's celebrations, spring flowers beginning",
-    'april': "- Spring weather: Mild temperatures, longer daylight, Easter crowds, good hiking conditions",
-    'may': "- Late spring: Pleasant weather, outdoor activities optimal, mild temperatures, spring colors peak",
+    'january': "- Winter: Shorter daylight (8:30am-4:30pm), storms possible, indoor alternatives essential",
+    'february': "- Late winter: Increasing daylight, stormy weather, fewer crowds, indoor focus",
+    'march': "- Early spring: Longer days, variable weather, St. Patrick's celebrations, spring flowers",
+    'april': "- Spring: Mild temperatures, longer daylight, Easter crowds, good hiking conditions",
+    'may': "- Late spring: Pleasant weather, outdoor activities optimal, mild temperatures, spring colors",
     'june': "- Early summer: Longest daylight approaching, good weather, tourist season begins",
     'july': "- Peak summer: Warmest temperatures, maximum daylight (5:30am-9:30pm), busiest period",
     'august': "- Late summer: Warm temperatures, busy season, occasional rain, festival season",
@@ -587,6 +608,7 @@ function getMonthSpecificGuidance(month) {
   return monthGuidance[month.toLowerCase()] || "- Weather varies: Pack layers and waterproof clothing";
 }
 
+// Enhanced budget strategy function
 function getBudgetStrategy(budget, interests) {
   const budgetNum = parseInt(budget);
   let strategies = [];
